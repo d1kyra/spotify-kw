@@ -4,100 +4,215 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spotify KW - Ultra-Lightweight Player</title>
-  <meta name="description" content="Aplikasi pemutar musik alternatif Spotify yang super ringan, hemat RAM dan storage, kualitas 320kbps dengan lirik karaoke." />
+  <meta name="description" content="Aplikasi pemutar musik alternatif Spotify modern, super ringan, hemat RAM dan storage, kualitas 320kbps dengan lirik karaoke." />
   <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg" />
   <link rel="apple-touch-icon" href="/static/images/logo.svg" />
   <link rel="stylesheet" href="/static/css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- COSMIC STARFIELD BACKGROUND CANVAS -->
+  <canvas id="starfield-canvas"></canvas>
+
   <div class="app-container">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <img src="/static/images/logo.svg" alt="Spotify KW Logo" class="sidebar-logo-img" />
-        <div class="logo-text">
-          <span class="brand-title">Spotify <span class="badge-kw">KW</span></span>
-          <span class="brand-sub">Ultra-Light Edition</span>
+    <!-- LEFT COLUMN: YOUR LIBRARY -->
+    <aside class="sidebar-library" id="sidebar-library">
+      <div class="library-header-row">
+        <div class="library-header-title">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1.5.866l6-3.464A1 1 0 0 0 22 17.536V6.464a1 1 0 0 0-.5-.866l-6-3.464zM8 3a1 1 0 0 0-2 0v18a1 1 0 0 0 2 0V3z"/></svg>
+          <h2>Your Library</h2>
+        </div>
+        <button class="btn-create-pill" id="btn-create-playlist" title="Buat Playlist Baru">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <span>Create</span>
+        </button>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="library-filter-chips">
+        <button class="lib-chip active" data-filter="all">All</button>
+        <button class="lib-chip" data-filter="playlists">Playlists</button>
+        <button class="lib-chip" data-filter="artists">Artists</button>
+      </div>
+
+      <!-- Search & Sort Subbar -->
+      <div class="library-subbar">
+        <div class="lib-search-box" id="btn-lib-search">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+        </div>
+        <div class="lib-sort-label" id="btn-sort-library" title="Urutan">
+          <span>Recents</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
         </div>
       </div>
 
-      <nav class="sidebar-nav">
-        <ul>
-          <li class="nav-item active" id="nav-home">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33zm-8.32 3.67 7.82-4.515a2 2 0 0 1 2 0l7.82 4.515A1 1 0 0 1 22 7.747V21a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-5h-2v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.747a1 1 0 0 1 .68-.93z"/></svg>
-            <span>Home</span>
-          </li>
-          <li class="nav-item" id="nav-search">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
-            <span>Cari Lagu</span>
-          </li>
-          <li class="nav-item" id="nav-library">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1.5.866l6-3.464A1 1 0 0 0 22 17.536V6.464a1 1 0 0 0-.5-.866l-6-3.464zM8 3a1 1 0 0 0-2 0v18a1 1 0 0 0 2 0V3z"/></svg>
-            <span>Koleksi Saya</span>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="sidebar-divider"></div>
-
-      <div class="sidebar-secondary-nav">
-        <ul>
-          <li class="nav-sub-item" id="nav-liked">
-            <div class="liked-icon-box">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </div>
-            <span>Lagu yang Disukai</span>
-            <span class="count-badge" id="liked-count-badge">0</span>
-          </li>
-          <li class="nav-sub-item" id="nav-local">
-            <div class="local-icon-box">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            </div>
-            <span>Lagu Lokal (Offline)</span>
-            <span class="count-badge" id="local-count-badge">0</span>
-          </li>
-          <li class="nav-sub-item" id="nav-downloaded">
-            <div class="downloaded-icon-box">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5h2v5h3l-4 4-4-4h3zm-3-8h8v2H8V8.5z"/></svg>
-            </div>
-            <span>Lagu Terunduh (Offline)</span>
-            <span class="count-badge" id="downloaded-count-badge">0</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="sidebar-playlists">
-        <div class="playlist-header">
-          <span>PLAYLIST ANDA</span>
-          <button class="btn-icon-tiny" id="btn-create-playlist" title="Buat Playlist Baru">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          </button>
-        </div>
-        <div class="playlist-list" id="sidebar-playlist-container">
-          <!-- User Created & Saved Playlists -->
-          <div id="user-playlist-items"></div>
-
-          <div class="sidebar-section-divider"></div>
-          <!-- User Spotify Playlists -->
-          <div class="playlist-item spotify-pl-item" data-spotify="4OmI8xAbhvqDcuKaLkEaN0" title="100 lagu (NIKI, LANY, dll.)">
-            ✨ gen z songs english
+      <!-- Library Item List -->
+      <div class="library-items-scroll" id="sidebar-playlist-container">
+        <!-- Liked Songs (Pinned) -->
+        <div class="library-item active-pinned" id="nav-liked" data-type="playlist" data-id="liked">
+          <div class="lib-thumb-box liked-gradient">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>
-          <div class="playlist-item spotify-pl-item" data-spotify="1gAv5vmayVaCxbxSX7KmQj" title="100 lagu (Adera, Yovie, Hivi!, Jaz)">
-            🇮🇩 Indo Happy Playlist
+          <div class="lib-item-info">
+            <span class="lib-item-title">Liked Songs</span>
+            <span class="lib-item-sub"><span class="pin-icon">📌</span> Playlist • Dikiwi</span>
           </div>
-          <div class="sidebar-divider" style="margin: 6px 0;"></div>
-          <!-- Curated Playlists -->
-          <div class="playlist-item active-playlist" data-id="featured-global">🔥 Top Global Hits</div>
-          <div class="playlist-item" data-id="featured-indo">🇮🇩 Indonesian Top Hits</div>
-          <div class="playlist-item" data-id="featured-chill">☕ Chill & Lofi Mix</div>
-          <div class="playlist-item" data-id="featured-rock">🎸 Rock Classics</div>
+        </div>
+
+        <!-- Offline Downloaded (0 Internet) -->
+        <div class="library-item" id="nav-downloaded" data-type="playlist" data-id="downloaded">
+          <div class="lib-thumb-box offline-gradient">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5h2v5h3l-4 4-4-4h3zm-3-8h8v2H8V8.5z"/></svg>
+          </div>
+          <div class="lib-item-info">
+            <span class="lib-item-title">Lagu Terunduh (Offline)</span>
+            <span class="lib-item-sub">Playlist • 0 Internet</span>
+          </div>
+          <span class="count-badge" id="downloaded-count-badge">0</span>
+        </div>
+
+        <!-- Local Music -->
+        <div class="library-item" id="nav-local" data-type="playlist" data-id="local">
+          <div class="lib-thumb-box local-gradient">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          </div>
+          <div class="lib-item-info">
+            <span class="lib-item-title">Lagu Lokal PC</span>
+            <span class="lib-item-sub">Playlist • File Lokal</span>
+          </div>
+          <span class="count-badge" id="local-count-badge">0</span>
+        </div>
+
+        <!-- Dynamic User Created Playlists -->
+        <div id="user-playlist-items"></div>
+
+        <!-- Preset Spotify Playlists matching Image 1 -->
+        <div class="library-item" data-type="playlist" data-spotify="4OmI8xAbhvqDcuKaLkEaN0">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=150&q=80" alt="gen z songs english" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">gen z songs english</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-spotify="1gAv5vmayVaCxbxSX7KmQj">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&q=80" alt="Indo Happy Playlist" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Indo Happy Playlist</span>
+            <span class="lib-item-sub">Playlist • Spotify</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="cur-hipdut">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=150&q=80" alt="Asikin aja" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Asikin aja</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="featured-global">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=150&q=80" alt="Your All-Time Top Songs" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Your All-Time Top Songs</span>
+            <span class="lib-item-sub">Playlist • Made for Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="featured-chill">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=150&q=80" alt="Azzeka + Dikiwi" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Azzeka + Dikiwi</span>
+            <span class="lib-item-sub">Playlist • Spotify</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="cur-puting">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=150&q=80" alt="Arabic &lt; &gt;" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Arabic &lt; &gt;</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="cur-jagoanmamah">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=150&q=80" alt="playlist X TJKT 2" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">playlist X TJKT 2</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="featured-rock">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=150&q=80" alt="2010s Mix" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">2010s Mix</span>
+            <span class="lib-item-sub">Playlist • Made for Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="cur-mmg">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=150&q=80" alt="Gak tau juga" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Gak tau juga</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <div class="library-item" data-type="playlist" data-id="cur-phonk">
+          <img class="lib-thumb-img" src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=150&q=80" alt="ky" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">ky</span>
+            <span class="lib-item-sub">Playlist • Dikiwi</span>
+          </div>
+        </div>
+
+        <!-- Artists (Circle Avatars!) -->
+        <div class="library-item artist-item" data-type="artist" data-query="Bunga Citra Lestari">
+          <img class="lib-thumb-img circle" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80" alt="Bunga Citra Lestari" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Bunga Citra Lestari</span>
+            <span class="lib-item-sub">Artist</span>
+          </div>
+        </div>
+
+        <div class="library-item artist-item" data-type="artist" data-query="Afgan">
+          <img class="lib-thumb-img circle" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80" alt="Afgan" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Afgan</span>
+            <span class="lib-item-sub">Artist</span>
+          </div>
+        </div>
+
+        <div class="library-item artist-item" data-type="artist" data-query="Neck Deep">
+          <img class="lib-thumb-img circle" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&q=80" alt="Neck Deep" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Neck Deep</span>
+            <span class="lib-item-sub">Artist</span>
+          </div>
+        </div>
+
+        <div class="library-item artist-item" data-type="artist" data-query="Rizky Febian">
+          <img class="lib-thumb-img circle" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80" alt="Rizky Febian" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Rizky Febian</span>
+            <span class="lib-item-sub">Artist</span>
+          </div>
+        </div>
+
+        <div class="library-item artist-item" data-type="artist" data-query="Tulus">
+          <img class="lib-thumb-img circle" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80" alt="Tulus" />
+          <div class="lib-item-info">
+            <span class="lib-item-title">Tulus</span>
+            <span class="lib-item-sub">Artist</span>
+          </div>
         </div>
       </div>
 
-      <div class="sidebar-footer">
+      <!-- Footer RAM Stat -->
+      <div class="library-footer">
         <div class="ram-pill" id="ram-pill" title="Klik untuk rincian pemakaian RAM & Storage">
           <span class="pulse-dot"></span>
           <span id="ram-stat-text">RAM: 52 MB</span>
@@ -106,7 +221,7 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT WRAPPER -->
+    <!-- CENTER COLUMN: MAIN WRAPPER -->
     <div class="main-wrapper">
       <!-- TOP BAR -->
       <header class="topbar">
@@ -119,24 +234,35 @@
           </button>
         </div>
 
-        <div class="topbar-search-container" id="topbar-search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
-          <input type="text" id="global-search-input" placeholder="Cari lagu/artis, atau tempel link playlist Spotify di sini..." autocomplete="off" />
-          <button class="search-clear-btn" id="btn-clear-search" style="display: none;">&times;</button>
+        <!-- Centered Home Button Pill + Search Pill -->
+        <div class="topbar-center-wrap">
+          <button class="topbar-home-btn active" id="nav-home" title="Beranda">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33zm-8.32 3.67 7.82-4.515a2 2 0 0 1 2 0l7.82 4.515A1 1 0 0 1 22 7.747V21a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-5h-2v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.747a1 1 0 0 1 .68-.93z"/></svg>
+          </button>
+
+          <div class="topbar-search-pill" id="topbar-search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+            <input type="text" id="global-search-input" placeholder="What do you want to play?" autocomplete="off" />
+            <button class="search-clear-btn" id="btn-clear-search" style="display: none;">&times;</button>
+            <div class="search-pill-right-icon" id="btn-browse-category" title="Browse / Kategori">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            </div>
+          </div>
         </div>
 
+        <!-- Right Topbar Controls -->
         <div class="topbar-actions">
-          <button class="badge-action" id="btn-open-import-modal" title="Impor Link Playlist Spotify">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.58 14.42c-.2.3-.57.4-.87.2-2.39-1.46-5.4-1.79-8.95-.98-.35.08-.69-.14-.77-.49-.08-.35.14-.69.49-.77 3.91-.89 7.24-.52 9.9 1.17.3.19.4.57.2.87zm1.22-2.72c-.25.39-.77.52-1.16.27-2.73-1.68-6.9-2.17-10.13-1.19-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.69-1.12 8.31-.57 11.5 1.36.39.25.52.77.27 1.16zm.13-2.85c-3.27-1.94-8.67-2.12-11.79-1.17-.5.15-1.03-.13-1.18-.63-.15-.5.13-1.03.63-1.18 3.59-1.09 9.57-.88 13.34 1.35.45.27.6.86.33 1.31-.27.45-.86.6-1.33.32z"/>
-            </svg>
-            <span class="hide-mobile">Impor Spotify</span>
+          <button class="btn-topbar-icon" id="btn-open-import-modal" title="Impor Playlist Spotify">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.58 14.42c-.2.3-.57.4-.87.2-2.39-1.46-5.4-1.79-8.95-.98-.35.08-.69-.14-.77-.49-.08-.35.14-.69.49-.77 3.91-.89 7.24-.52 9.9 1.17.3.19.4.57.2.87zm1.22-2.72c-.25.39-.77.52-1.16.27-2.73-1.68-6.9-2.17-10.13-1.19-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.69-1.12 8.31-.57 11.5 1.36.39.25.52.77.27 1.16zm.13-2.85c-3.27-1.94-8.67-2.12-11.79-1.17-.5.15-1.03-.13-1.18-.63-.15-.5.13-1.03.63-1.18 3.59-1.09 9.57-.88 13.34 1.35.45.27.6.86.33 1.31-.27.45-.86.6-1.33.32z"/></svg>
           </button>
-
-          <button class="badge-action" id="btn-open-stats-modal" title="Performa RAM & Hemat Storage">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
-            <span class="hide-mobile">Info RAM</span>
+          <button class="btn-topbar-icon" id="btn-open-stats-modal" title="Performa RAM">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
           </button>
+          <!-- User Profile Pill "Dikiwi" -->
+          <div class="user-profile-pill" id="user-profile-pill" title="Profil Dikiwi">
+            <img class="user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" alt="Dikiwi" />
+            <span class="user-name">Dikiwi</span>
+          </div>
         </div>
       </header>
 
@@ -144,21 +270,70 @@
       <main class="content-body" id="main-content-scroll">
         <!-- VIEW: HOME -->
         <section class="view-panel active-view" id="view-home">
-          <div class="hero-greeting">
-            <h1 id="greeting-text">Selamat Datang</h1>
-            <p class="hero-sub">Streaming 320kbps tanpa iklan, konsumsi RAM <span class="highlight-green">85% lebih ringan</span>.</p>
+          <!-- Filter chips: All / Music -->
+          <div class="home-filter-row">
+            <button class="filter-pill-main active">All</button>
+            <button class="filter-pill-main">Music</button>
           </div>
 
-          <!-- Quick access grid -->
-          <div class="quick-grid" id="quick-grid-container">
-            <!-- 6 quick cards dynamically loaded -->
+          <!-- QUICK GRID (8 Cards: 2 Rows x 4 Cols) -->
+          <div class="quick-grid-8" id="quick-grid-container">
+            <!-- 8 items dynamically injected or populated by app.js -->
           </div>
 
-          <!-- Dynamic Sections -->
-          <div id="home-featured-sections">
-            <div class="loading-spinner-box">
-              <div class="spinner"></div>
-              <span>Memuat rekomendasi musik...</span>
+          <!-- PROMO MINI-PLAYER BANNER -->
+          <div class="promo-miniplayer-card" id="promo-miniplayer-banner">
+            <div class="promo-text-side">
+              <h2 class="promo-title">2. Try the Miniplayer</h2>
+              <p class="promo-desc">Control your music and watch videos without interruptions.</p>
+              <div class="promo-btns">
+                <button class="btn-promo-try" id="btn-try-miniplayer">Try it</button>
+                <button class="btn-promo-link" id="btn-miniplayer-tips">Show more tips</button>
+              </div>
+            </div>
+            <div class="promo-graphics-side">
+              <div class="miniplayer-mockup-box">
+                <div class="mockup-screen">
+                  <div class="mockup-album-art"></div>
+                  <div class="mockup-meta">
+                    <span class="mockup-song">Green Light</span>
+                    <span class="mockup-artist">Lorde</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- JUMP BACK IN SECTION -->
+          <div class="content-section" id="section-jump-back-in">
+            <div class="section-header-row">
+              <h2 class="section-title">Jump back in</h2>
+              <button class="btn-show-all" data-target="jump">Show all</button>
+            </div>
+            <div class="cards-grid-row" id="grid-jump-back-in">
+              <!-- Large cards: MMG, Phonk, Dewa 19, Dj Old -->
+            </div>
+          </div>
+
+          <!-- MADE FOR DIKIWI SECTION -->
+          <div class="content-section" id="section-made-for-dikiwi">
+            <div class="section-header-row">
+              <h2 class="section-title">Made For Dikiwi</h2>
+              <button class="btn-show-all" data-target="dikiwi">Show all</button>
+            </div>
+            <div class="cards-grid-row" id="grid-made-for-dikiwi">
+              <!-- Discover Weekly, Daily Mix 1, 2, 4, 5, 6, Release Radar -->
+            </div>
+          </div>
+
+          <!-- RECENTS SECTION -->
+          <div class="content-section" id="section-recents">
+            <div class="section-header-row">
+              <h2 class="section-title">Recents</h2>
+              <button class="btn-show-all" data-target="recents">Show all</button>
+            </div>
+            <div class="cards-grid-row" id="grid-recents">
+              <!-- Recents cards -->
             </div>
           </div>
         </section>
@@ -243,7 +418,7 @@
               <span class="th-title">JUDUL</span>
               <span class="th-album">ALBUM</span>
               <span class="th-dur">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 2 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
               </span>
             </div>
             <div class="tracklist-items" id="playlist-tracklist-items">
@@ -252,200 +427,151 @@
           </div>
         </section>
 
-        <!-- VIEW: LOCAL MUSIC (OFFLINE) -->
+        <!-- VIEW: LOCAL -->
         <section class="view-panel" id="view-local" style="display: none;">
           <div class="local-hero">
-            <div class="local-hero-content">
-              <h1>Pemutar Musik Lokal (Offline)</h1>
-              <p>Putar koleksi musik MP3/FLAC/WAV di komputermu secara offline tanpa kuota internet.</p>
-              <div class="local-actions">
-                <button class="btn-primary" id="btn-browse-local-folder">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-                  <span>Pilih Folder Musik di PC</span>
-                </button>
-                <button class="btn-secondary" id="btn-scan-default-music">
-                  <span>Folder Musik Standar</span>
-                </button>
-              </div>
+            <h1>Pemutar Musik Lokal (Offline)</h1>
+            <p>Putar file MP3 / FLAC / WAV / M4A dari komputer Anda secara instan tanpa mengunggah ke server.</p>
+            <div class="local-actions">
+              <label class="btn-primary" for="local-file-input">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <span>Pilih File Audio</span>
+              </label>
+              <input type="file" id="local-file-input" multiple accept="audio/*" style="display: none;" />
+              <label class="btn-secondary" for="local-folder-input">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                <span>Pilih Folder Musik</span>
+              </label>
+              <input type="file" id="local-folder-input" webkitdirectory directory multiple style="display: none;" />
             </div>
           </div>
 
-          <div class="drag-drop-zone" id="drag-drop-zone">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="#1ed760"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            <p>Atau <strong>seret & lepas</strong> file lagu (.mp3, .flac, .wav, .m4a) langsung ke sini</p>
-            <input type="file" id="file-input-direct" multiple accept="audio/*" style="display: none;" />
-          </div>
-
-          <div class="current-folder-label" id="local-folder-status" style="display: none;">
-            <span>Folder: <code id="local-current-path">-</code></span>
-            <span class="count-pill" id="local-count-text">0 lagu</span>
-          </div>
-
-          <div class="tracklist-container" id="local-tracklist-container" style="display: none;">
+          <div class="tracklist-container mt-4">
             <div class="track-header-row">
               <span class="th-num">#</span>
               <span class="th-title">JUDUL FILE</span>
-              <span class="th-album">ARTIS / ALBUM</span>
+              <span class="th-album">FORMAT</span>
               <span class="th-dur">DURASI</span>
             </div>
-            <div class="tracklist-items" id="local-tracklist-items"></div>
+            <div class="tracklist-items" id="local-tracklist-items">
+              <div style="text-align: center; padding: 48px; color: var(--text-subdued);">
+                Belum ada file audio yang dimuat. Klik tombol di atas untuk memutar lagu offline dari laptop/PC Anda.
+              </div>
+            </div>
           </div>
         </section>
       </main>
     </div>
 
-    <!-- SYNCHRONIZED LYRICS MODAL / OVERLAY -->
-    <div class="lyrics-overlay" id="lyrics-overlay" style="display: none;">
-      <div class="lyrics-topbar">
-        <div class="lyrics-song-info">
-          <span class="lyrics-badge">KARAOKE MODE</span>
-          <span class="lyrics-track-title" id="lyrics-title">-</span>
-          <span class="lyrics-track-artist" id="lyrics-artist">-</span>
-        </div>
-        <button class="btn-close-lyrics" id="btn-close-lyrics" title="Tutup Lirik">&times;</button>
+    <!-- RIGHT COLUMN: NOW PLAYING & VINYL RECORD PANEL -->
+    <aside class="panel-now-playing" id="panel-now-playing">
+      <!-- Top Context Header -->
+      <div class="np-header">
+        <span class="np-context-title" id="np-context-title">gen z songs english</span>
+        <button class="btn-icon-tiny" id="btn-toggle-np-panel" title="Tutup / Sembunyikan Panel">&times;</button>
       </div>
-      <div class="lyrics-scroll-box" id="lyrics-container">
-        <div class="lyrics-placeholder">Menunggu lirik...</div>
-      </div>
-    </div>
 
-    <!-- REAL-TIME AUDIO VISUALIZER FULLSCREEN/CANVAS -->
-    <div class="visualizer-overlay" id="visualizer-overlay" style="display: none;">
-      <div class="visualizer-header">
-        <h2>Audio Spectrum Visualizer</h2>
-        <button class="btn-close-lyrics" id="btn-close-visualizer">&times;</button>
+      <!-- VINYL RECORD DISK -->
+      <div class="np-vinyl-stage">
+        <div class="np-vinyl-disc" id="np-vinyl-disc">
+          <div class="vinyl-groove-lines"></div>
+          <div class="vinyl-center-label">
+            <img id="np-vinyl-cover" src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=200&q=80" alt="Cover" />
+            <div class="vinyl-center-spindle"></div>
+          </div>
+        </div>
       </div>
-      <div class="visualizer-canvas-wrapper">
-        <canvas id="visualizer-canvas"></canvas>
-      </div>
-    </div>
 
-    <!-- QUEUE DRAWER -->
-    <aside class="queue-drawer" id="queue-drawer" style="display: none;">
-      <div class="queue-header">
-        <h3>Antrean Lagu (Queue)</h3>
-        <button class="btn-icon-tiny" id="btn-close-queue">&times;</button>
+      <!-- NOW PLAYING METADATA -->
+      <div class="np-track-meta">
+        <div class="np-track-title" id="np-track-title">Old Love</div>
+        <div class="np-track-artist" id="np-track-artist">yuji, putri dahlia</div>
       </div>
-      <div class="queue-section">
-        <span class="queue-label">Sedang Diputar</span>
-        <div class="queue-item now-playing" id="queue-now-playing-box">
-          <span class="empty-queue-hint">Tidak ada lagu yang sedang diputar</span>
+
+      <!-- SCRUBBER -->
+      <div class="np-scrubber-row">
+        <span class="np-time" id="np-current-time">1:20</span>
+        <div class="slider-container" id="np-seek-container">
+          <input type="range" id="np-seek-slider" min="0" max="100" value="30" step="0.1" />
+          <div class="slider-fill" id="np-seek-fill" style="width: 30%;"></div>
         </div>
+        <span class="np-time" id="np-total-duration">4:09</span>
       </div>
-      <div class="queue-section">
-        <div class="queue-sub-header">
-          <span class="queue-label">Berikutnya</span>
-          <button class="btn-link" id="btn-clear-queue">Bersihkan</button>
+
+      <!-- CONTROLS -->
+      <div class="np-controls-row">
+        <button class="control-btn" id="btn-np-shuffle" title="Acak">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/></svg>
+        </button>
+        <button class="control-btn" id="btn-np-prev" title="Sebelumnya">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6,6 6,18 8,18 8,6"/><polygon points="18,6 10,12 18,18"/></svg>
+        </button>
+        <button class="btn-play-pause btn-np-play-pause" id="btn-np-play-pause" title="Putar/Jeda">
+          <svg id="np-icon-play" viewBox="0 0 24 24" width="22" height="22" fill="black"><polygon points="6,4 20,12 6,20"/></svg>
+          <svg id="np-icon-pause" viewBox="0 0 24 24" width="22" height="22" fill="black" style="display: none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button class="control-btn" id="btn-np-next" title="Berikutnya">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6,18 14,12 6,6"/><polygon points="16,6 16,18 18,18 18,6"/></svg>
+        </button>
+        <button class="control-btn" id="btn-np-repeat" title="Ulangi">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="np-toolbar-row">
+        <button class="control-btn" id="btn-np-lyrics" title="Lirik Karaoke">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+        <button class="control-btn" id="btn-np-queue" title="Antrean">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        </button>
+        <div class="np-volume-box">
+          <button class="control-btn" id="btn-np-volume-icon" title="Volume">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+          <div class="slider-container np-vol-slider-wrap">
+            <input type="range" id="np-volume-slider" min="0" max="1" step="0.01" value="0.8" />
+            <div class="slider-fill" id="np-volume-fill" style="width: 80%;"></div>
+          </div>
         </div>
-        <div class="queue-items-list" id="queue-next-items">
-          <span class="empty-queue-hint">Antrean kosong</span>
+        <button class="control-btn" id="btn-np-fullscreen" title="Layar Penuh">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+
+      <!-- LOWER RIGHT: LARGE ARTWORK & ABOUT THE ARTIST -->
+      <div class="np-scroll-cards">
+        <!-- Large Cover Art Card -->
+        <div class="np-card np-large-art-box">
+          <img id="np-large-art-img" src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=500&q=80" alt="Artwork" />
+          <div class="np-large-art-meta">
+            <div class="np-large-titles">
+              <h3 id="np-card-track-title">Old Love</h3>
+              <span id="np-card-track-artist">yuji, putri dahlia</span>
+            </div>
+            <button class="btn-icon-tiny btn-add-current-to-pl" id="btn-np-add-to-pl" title="Tambah ke Playlist">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- About the artist Card -->
+        <div class="np-card np-about-artist-card">
+          <div class="about-artist-banner" id="np-artist-banner" style="background-image: url('https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=500&q=80');">
+            <span class="about-artist-badge">About the artist</span>
+          </div>
+          <div class="about-artist-body">
+            <h4 id="np-about-artist-name">yuji</h4>
+            <span class="about-artist-listeners" id="np-about-artist-listeners">1,824,930 monthly listeners</span>
+            <p class="about-artist-desc" id="np-about-artist-desc">Indie pop / R&B duo sensation delivering soulful acoustic melodies and heartfelt romantic vocals.</p>
+          </div>
         </div>
       </div>
     </aside>
 
-    <!-- RAM & RESOURCE MONITOR MODAL -->
-    <div class="modal-backdrop" id="stats-modal" style="display: none;">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>⚡ Efisiensi Sistem & Penghematan</h2>
-          <button class="btn-close-modal" id="btn-close-stats-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p class="stats-intro">Perbandingan nyata penggunaan sumber daya perangkat Anda dibandingkan Spotify resmi (Electron):</p>
-          
-          <div class="stats-grid">
-            <div class="stat-box">
-              <span class="stat-title">Pemakaian RAM</span>
-              <div class="stat-value"><span id="modal-ram-val">52</span> MB</div>
-              <div class="stat-sub">Spotify Resmi: ~650 MB</div>
-              <div class="stat-progress-bar">
-                <div class="progress-fill green-fill" id="modal-ram-bar" style="width: 10%;"></div>
-              </div>
-              <span class="stat-tag" id="modal-ram-tag">Hemat 92% RAM</span>
-            </div>
-
-            <div class="stat-box">
-              <span class="stat-title">Penyimpanan Disk</span>
-              <div class="stat-value"><span id="modal-storage-val">4.5</span> MB</div>
-              <div class="stat-sub">Spotify Resmi: ~550 MB+</div>
-              <div class="stat-progress-bar">
-                <div class="progress-fill green-fill" id="modal-storage-bar" style="width: 2%;"></div>
-              </div>
-              <span class="stat-tag">Hemat 99% Storage</span>
-            </div>
-          </div>
-
-          <div class="tech-points">
-            <div class="tech-row">
-              <span class="tech-icon">🚀</span>
-              <div>
-                <strong>Berbagi Engine Windows (0MB Extra Chromium)</strong>
-                <p>Tidak membundel browser baru seperti Electron; memakai shared WebView bawaan OS.</p>
-              </div>
-            </div>
-            <div class="tech-row">
-              <span class="tech-icon">⚡</span>
-              <div>
-                <strong>Streaming Parsial HTTP 206</strong>
-                <p>Audio dialirkan dalam potongan 64KB, tidak menimbun seluruh file ke dalam RAM.</p>
-              </div>
-            </div>
-            <div class="tech-row">
-              <span class="tech-icon">🎯</span>
-              <div>
-                <strong>Zero Virtual DOM Overhead</strong>
-                <p>Dibuat dengan Vanilla JavaScript modern murni tanpa React/Vue bundler berat.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="cache-action-row">
-            <div>
-              <span>Cache saat ini: <strong id="modal-cache-size">0 MB</strong></span>
-            </div>
-            <button class="btn-secondary" id="btn-clear-cache">Bersihkan Cache</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SPOTIFY IMPORT MODAL -->
-    <div class="modal-backdrop" id="import-modal" style="display: none;">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2>🔗 Impor Playlist Spotify</h2>
-          <button class="btn-close-modal" id="btn-close-import-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p class="stats-intro">Tempelkan tautan playlist Spotify publik apa saja untuk langsung diimpor dan diputar dengan kualitas 320kbps:</p>
-          
-          <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-            <input type="text" id="import-spotify-input" placeholder="https://open.spotify.com/playlist/..." style="flex: 1; height: 42px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0 14px; color: white; outline: none; font-family: inherit;" />
-            <button class="btn-primary" id="btn-submit-import-spotify" style="padding: 0 20px;">
-              <span>Impor</span>
-            </button>
-          </div>
-
-          <div style="margin-top: 16px;">
-            <span style="font-size: 0.8rem; color: var(--text-subdued); font-weight: 700; display: block; margin-bottom: 10px;">CONTOH PLAYLIST PENGGUNA:</span>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button class="filter-chip quick-import-chip" data-id="4OmI8xAbhvqDcuKaLkEaN0" style="text-align: left; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-                <span>✨ gen z songs english <small style="color: var(--text-secondary);">(krisnika • 100 lagu)</small></span>
-                <span class="highlight-green">Buka &raquo;</span>
-              </button>
-              <button class="filter-chip quick-import-chip" data-id="1gAv5vmayVaCxbxSX7KmQj" style="text-align: left; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-                <span>🇮🇩 Indo Happy Playlist <small style="color: var(--text-secondary);">(Dewi Nrhyt • 100 lagu)</small></span>
-                <span class="highlight-green">Buka &raquo;</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BOTTOM PLAYBACK BAR -->
-    <footer class="bottom-player">
-      <!-- Track Info (Left) -->
+    <!-- HIDDEN BOTTOM BAR (Syncs with Right Panel or used when Right Panel closed) -->
+    <footer class="player-bar-container" id="bottom-player-bar" style="display: none;">
       <div class="player-left">
         <div class="player-thumb-box">
           <img id="player-thumb" src="/static/images/default-album.svg" alt="Cover" />
@@ -461,7 +587,6 @@
         </button>
       </div>
 
-      <!-- Controls & Progress (Center) -->
       <div class="player-center">
         <div class="player-controls">
           <button class="control-btn" id="btn-shuffle" title="Acak (Shuffle)">
@@ -493,20 +618,16 @@
         </div>
       </div>
 
-      <!-- Extra Tools (Right) -->
       <div class="player-right">
         <button class="control-btn" id="btn-toggle-lyrics" title="Lirik Karaoke">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </button>
-
         <button class="control-btn" id="btn-toggle-visualizer" title="Visualizer Audio">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 9h2v6H4zm4-4h2v14H8zm4 7h2v7h-2zm4-9h2v16h-2zm4 6h2v10h-2z"/></svg>
         </button>
-
         <button class="control-btn" id="btn-toggle-queue" title="Daftar Antrean">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
         </button>
-
         <div class="quality-selector-wrap">
           <select id="audio-quality-select" title="Pilihan Kualitas Bitrate Audio">
             <option value="320" selected>320k High</option>
@@ -514,7 +635,6 @@
             <option value="96">96k Saver</option>
           </select>
         </div>
-
         <div class="volume-container">
           <button class="control-btn" id="btn-volume-icon" title="Bisukan (Mute)">
             <svg id="vol-icon-high" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
@@ -527,6 +647,93 @@
         </div>
       </div>
     </footer>
+  </div>
+
+  <!-- OVERLAYS: LYRICS, VISUALIZER, QUEUE, STATS -->
+  <div class="overlay-panel" id="lyrics-overlay" style="display: none;">
+    <div class="overlay-header">
+      <div class="overlay-title-group">
+        <h2 id="lyrics-title">Lirik Lagu</h2>
+        <span id="lyrics-artist">Artis</span>
+      </div>
+      <button class="btn-icon-tiny" id="btn-close-lyrics">&times;</button>
+    </div>
+    <div class="lyrics-scroll-box" id="lyrics-container">
+      <p class="lyrics-empty">Memuat lirik...</p>
+    </div>
+  </div>
+
+  <div class="overlay-panel" id="visualizer-overlay" style="display: none;">
+    <div class="overlay-header">
+      <h2>Audio Visualizer 320kbps</h2>
+      <button class="btn-icon-tiny" id="btn-close-visualizer">&times;</button>
+    </div>
+    <div class="visualizer-container">
+      <canvas id="visualizer-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="drawer-panel" id="queue-drawer" style="display: none;">
+    <div class="drawer-header">
+      <h3>Daftar Antrean</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action-outline" id="btn-clear-queue">Hapus</button>
+        <button class="btn-icon-tiny" id="btn-close-queue">&times;</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <div class="queue-section-label">SEDANG DIPUTAR</div>
+      <div id="queue-now-playing-box"></div>
+      <div class="queue-section-label mt-4">BERIKUTNYA</div>
+      <div id="queue-next-items"></div>
+    </div>
+  </div>
+
+  <!-- STATS MODAL -->
+  <div class="modal-overlay" id="stats-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Info Efisiensi Sistem</h3>
+        <button class="btn-icon-tiny" id="btn-close-stats-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="stats-modal-body">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <span class="stat-num" id="stat-val-ram">52 MB</span>
+            <span class="stat-desc">RAM Digunakan</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" id="stat-val-saved">90%</span>
+            <span class="stat-desc">Lebih Ringan</span>
+          </div>
+        </div>
+        <p style="margin-top: 14px; font-size: 0.85rem; color: var(--text-subdued);">
+          Dibandingkan aplikasi desktop Spotify resmi (~650 MB RAM), Spotify KW menggunakan Web Audio API murni & Starlette streaming chunked sehingga performa laptop Anda tetap dingin dan lancar.
+        </p>
+        <div style="margin-top: 18px; text-align: right;">
+          <button class="btn-action-outline" id="btn-clear-cache">Bersihkan Cache Memori</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT SPOTIFY MODAL -->
+  <div class="modal-overlay" id="import-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Impor Playlist Spotify</h3>
+        <button class="btn-icon-tiny" id="btn-close-import-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+          Tempel tautan playlist Spotify publik apa saja (hingga 100 lagu per playlist).
+        </p>
+        <input type="text" id="import-spotify-input" class="modal-input" placeholder="https://open.spotify.com/playlist/..." />
+        <div style="margin-top: 14px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="btn-primary" id="btn-submit-import-spotify" style="padding: 10px 20px;">Muat Playlist</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ADD TO PLAYLIST MODAL -->

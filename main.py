@@ -572,6 +572,199 @@ CURATED_PLAYLISTS = {
             ("Hotel California", "Eagles", 391),
             ("Fix You", "Coldplay", 295),
         ]
+    },
+    "cur-hipdut": {
+        "id": "cur-hipdut",
+        "title": "HIPDUT VIRAL ASIK",
+        "subtitle": "Koplo & Dangdut Remix Viral TikTok 2026",
+        "cover": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80",
+        "queries": [
+            ("Rungkad", "Happy Asmara", 250),
+            ("Nemen", "Gildcoustic", 230),
+            ("Sanes", "Guyon Waton, Denny Caknan", 280),
+            ("Kisinan 2", "Masdddho", 215),
+            ("Wirang", "Denny Caknan", 260),
+            ("Dumes", "Woro Widowati", 240),
+        ]
+    },
+    "cur-puting": {
+        "id": "cur-puting",
+        "title": "Puting Beliung",
+        "subtitle": "Hits viral jedag jedug bassboosted",
+        "cover": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&q=80",
+        "queries": [
+            ("Dumes", "Woro Widowati", 240),
+            ("Crito Mustahil", "Denny Caknan", 260),
+            ("Lamunan", "Wahyu F Giri", 220),
+            ("Alum", "Gildcoustic", 250),
+        ]
+    },
+    "cur-olivia": {
+        "id": "cur-olivia",
+        "title": "Olivia Rodrigo",
+        "subtitle": "Best of Olivia Rodrigo • SOUR & GUTS",
+        "cover": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80",
+        "queries": [
+            ("vampire", "Olivia Rodrigo", 219),
+            ("drivers license", "Olivia Rodrigo", 242),
+            ("good 4 u", "Olivia Rodrigo", 178),
+            ("deja vu", "Olivia Rodrigo", 215),
+            ("bad idea right?", "Olivia Rodrigo", 184),
+        ]
+    },
+    "cur-dailymix3": {
+        "id": "cur-dailymix3",
+        "title": "Daily Mix 3",
+        "subtitle": "Lauv, keshi, Jeremy Zucker, NIKI, Joji",
+        "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&q=80",
+        "queries": [
+            ("Paris in the Rain", "Lauv", 205),
+            ("Beside You", "keshi", 166),
+            ("comethru", "Jeremy Zucker", 181),
+            ("Every Summertime", "NIKI", 215),
+            ("Glimpse of Us", "Joji", 233),
+        ]
+    },
+    "cur-jagoanmamah": {
+        "id": "cur-jagoanmamah",
+        "title": "jagoanmamah DJ old TT",
+        "subtitle": "Nostalgia Remix Breakbeat Jedag Jedug",
+        "cover": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&q=80",
+        "queries": [
+            ("DJ Old Mengkane", "DJ Viral", 210),
+            ("DJ Melodi Asik", "DJ Jedag Jedug", 195),
+            ("DJ Sound TikTok", "DJ Remix", 220),
+        ]
+    },
+    "cur-mmg": {
+        "id": "cur-mmg",
+        "title": "MMG (My Mine Gueh)",
+        "subtitle": "With Naykilla, dia, Akbar Chalay and more",
+        "cover": "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=500&q=80",
+        "queries": [
+            ("Gueh", "Naykilla, dia", 180),
+            ("Mine", "Akbar Chalay", 195),
+            ("Pelangi", "Naykilla", 210),
+        ]
+    },
+    "cur-phonk": {
+        "id": "cur-phonk",
+        "title": "BRAZILIAN PHONK 2026 🔥",
+        "subtitle": "Latest Popular Phonk; Funk songs of 2026",
+        "cover": "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&q=80",
+        "queries": [
+            ("Automotivo Bibi Fogosa", "Bibi Babydoll", 155),
+            ("Montagem Mysterious Game", "LXNGVX", 140),
+            ("Dança Do Phonk", "Phonk Killer", 165),
+            ("Tudo Azul Phonk", "Phonk Nation", 170),
+        ]
+    },
+    "cur-dewa19": {
+        "id": "cur-dewa19",
+        "title": "Dewa 19",
+        "subtitle": "With Dewa, Kahitna, Pamungkas and more",
+        "cover": "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&q=80",
+        "queries": [
+            ("Kangen", "Dewa 19", 330),
+            ("Pupus", "Dewa 19", 305),
+            ("Risalah Hati", "Dewa 19", 290),
+            ("Separuh Nafas", "Dewa 19", 210),
+            ("To the Bone", "Pamungkas", 344),
+            ("Cantik", "Kahitna", 240),
+        ]
+    },
+    "cur-djold": {
+        "id": "cur-djold",
+        "title": "Dj old 2019-2020-2021-2022-2023 🔥",
+        "subtitle": "welcome to back 2016-2023 😋 kumpulan lagu DJ old",
+        "cover": "https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?w=500&q=80",
+        "queries": [
+            ("DJ Pong Pong", "DJ Old", 210),
+            ("DJ Aisyah", "DJ Remix", 240),
+            ("DJ Gam Gam Piri", "DJ TikTok", 190),
+        ]
+    },
+    "cur-discover": {
+        "id": "cur-discover",
+        "title": "DISCOVER WEEKLY",
+        "subtitle": "Your shortcut to hidden gems, deep cuts, and future faves",
+        "cover": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=500&q=80",
+        "queries": [
+            ("Old Love", "yuji, putri dahlia", 249),
+            ("Glimpse of Us", "Joji", 233),
+            ("Die With A Smile", "Lady Gaga, Bruno Mars", 251),
+            ("Rayuan Perempuan Gila", "Nadin Amizah", 312),
+            ("Cruel Summer", "Taylor Swift", 178),
+        ]
+    },
+    "cur-mix-01": {
+        "id": "cur-mix-01",
+        "title": "Daily Mix 01",
+        "subtitle": "Tulus, Dimas M, Yovie & Nuno and more",
+        "cover": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=500&q=80",
+        "queries": [
+            ("Hati-Hati di Jalan", "Tulus", 242),
+            ("Manusia Kuat", "Tulus", 185),
+            ("Janji Suci", "Yovie & Nuno", 200),
+            ("Dia Milikku", "Yovie & Nuno", 225),
+        ]
+    },
+    "cur-mix-02": {
+        "id": "cur-mix-02",
+        "title": "Daily Mix 02",
+        "subtitle": "Taylor Swift, Olivia Rodrigo, Ariana Grande and more",
+        "cover": "https://images.unsplash.com/photo-1520523839898-507124cd5371?w=500&q=80",
+        "queries": [
+            ("Cruel Summer", "Taylor Swift", 178),
+            ("vampire", "Olivia Rodrigo", 219),
+            ("we can't be friends", "Ariana Grande", 228),
+            ("Anti-Hero", "Taylor Swift", 200),
+        ]
+    },
+    "cur-mix-04": {
+        "id": "cur-mix-04",
+        "title": "Daily Mix 04",
+        "subtitle": "Rahmat Tahalu, Dj pongsky, DJ Hening and more",
+        "cover": "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=500&q=80",
+        "queries": [
+            ("DJ Mengkane", "Rahmat Tahalu", 215),
+            ("DJ Pongsky Slow", "DJ Pongsky", 195),
+        ]
+    },
+    "cur-mix-05": {
+        "id": "cur-mix-05",
+        "title": "Daily Mix 05",
+        "subtitle": "Hindia, Sal Priadi, .Feast and more",
+        "cover": "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=500&q=80",
+        "queries": [
+            ("Evaluasi", "Hindia", 235),
+            ("Gala Bunga Matahari", "Sal Priadi", 230),
+            ("Peradaban", ".Feast", 340),
+            ("Secukupnya", "Hindia", 200),
+        ]
+    },
+    "cur-mix-06": {
+        "id": "cur-mix-06",
+        "title": "Daily Mix 06",
+        "subtitle": "Chrisye, NIKI, Diskoria and more",
+        "cover": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&q=80",
+        "queries": [
+            ("Kala Cinta Menggoda", "Chrisye", 320),
+            ("C.H.R.I.S.Y.E.", "Diskoria, Laleilmanino, Eva Celia", 280),
+            ("Every Summertime", "NIKI", 215),
+            ("lowkey", "NIKI", 171),
+        ]
+    },
+    "cur-release": {
+        "id": "cur-release",
+        "title": "Release Radar",
+        "subtitle": "Catch all the latest music from artists you follow",
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80",
+        "queries": [
+            ("Old Love", "yuji, putri dahlia", 249),
+            ("Untungnya, Hidup Harus Tetap Berjalan", "Bernadya", 217),
+            ("BIRDS OF A FEATHER", "Billie Eilish", 183),
+        ]
     }
 }
 
