@@ -62,6 +62,7 @@ body {
 .app-container {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr var(--nowplaying-width);
+  grid-template-rows: 1fr;
   height: 100vh;
   width: 100vw;
   position: relative;
@@ -70,6 +71,44 @@ body {
   gap: 8px;
   overflow: hidden;
   background: transparent;
+  transition: grid-template-columns 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* WHEN RIGHT PANEL (PICT 2) IS CLOSED -> MAIN WRAPPER (PICT 3) EXPANDS (MELEBAR) */
+.app-container.right-panel-closed {
+  grid-template-columns: var(--sidebar-width) 1fr !important;
+  grid-template-rows: 1fr 74px !important;
+}
+
+.app-container.right-panel-closed .panel-now-playing {
+  display: none !important;
+}
+
+.app-container.right-panel-closed .sidebar-library {
+  grid-row: 1;
+}
+
+.app-container.right-panel-closed .main-wrapper {
+  grid-row: 1;
+  width: 100%;
+}
+
+.app-container.right-panel-closed .player-bar-container {
+  display: flex !important;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  animation: slideUpBar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUpBar {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* SCROLLBAR CUSTOMIZATION */
@@ -2200,9 +2239,15 @@ body {
 @media (max-width: 1240px) {
   .app-container {
     grid-template-columns: 260px 1fr;
+    grid-template-rows: 1fr 74px;
   }
   .panel-now-playing {
-    display: none;
+    display: none !important;
+  }
+  .player-bar-container {
+    display: flex !important;
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
   .quick-grid-8 {
     grid-template-columns: repeat(2, 1fr);
@@ -2219,4 +2264,165 @@ body {
   .quick-grid-8 {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================
+   BOTTOM PLAYER BAR (ACTIVE WHEN RIGHT PANEL IS CLOSED)
+   ========================================== */
+.player-bar-container {
+  height: 72px;
+  background: rgba(18, 18, 18, 0.96);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  z-index: 100;
+  gap: 16px;
+}
+
+.player-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+  max-width: 25%;
+}
+
+.player-thumb-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #222;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.player-thumb-box:hover {
+  transform: scale(1.06);
+}
+
+.player-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-meta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.player-title-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#player-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+#player-title:hover {
+  text-decoration: underline;
+}
+
+.player-artist {
+  font-size: 0.75rem;
+  color: var(--text-subdued);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-like-heart {
+  background: transparent;
+  border: none;
+  color: var(--text-subdued);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-like-heart:hover,
+.btn-like-heart.liked {
+  color: #1ed760;
+  transform: scale(1.1);
+}
+
+.player-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 580px;
+  flex: 1;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.player-scrubber-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.time-label {
+  font-size: 0.72rem;
+  color: var(--text-subdued);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: center;
+}
+
+.player-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+  justify-content: flex-end;
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 110px;
+}
+
+.volume-slider-box {
+  width: 75px;
+}
+
+.quality-selector-wrap select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 500px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
 }

@@ -331,6 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function playTrack(track, newQueue = null) {
     if (!track) return;
     
+    // Auto-reopen Pict 2 (Now Playing Panel) whenever any song is played
+    openNowPlayingPanel();
+
     if (newQueue && Array.isArray(newQueue)) {
       state.queue = [...newQueue];
     }
@@ -517,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (audio.paused) {
+      openNowPlayingPanel();
       audio.play().catch(e => console.warn(e));
     } else {
       audio.pause();
@@ -753,6 +757,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // RIGHT COLUMN (NOW PLAYING & VINYL ENGINE)
   // ==========================================
+  function openNowPlayingPanel() {
+    const container = document.querySelector('.app-container');
+    const panel = document.getElementById('panel-now-playing');
+    const bottomBar = document.getElementById('bottom-player-bar');
+    if (container) container.classList.remove('right-panel-closed');
+    if (panel) panel.style.display = 'flex';
+    if (bottomBar) bottomBar.style.display = 'none';
+  }
+
+  function closeNowPlayingPanel() {
+    const container = document.querySelector('.app-container');
+    const panel = document.getElementById('panel-now-playing');
+    const bottomBar = document.getElementById('bottom-player-bar');
+    if (container) container.classList.add('right-panel-closed');
+    if (panel) panel.style.display = 'none';
+    if (bottomBar) bottomBar.style.display = 'flex';
+  }
+
+  function toggleNowPlayingPanel() {
+    const container = document.querySelector('.app-container');
+    if (container && container.classList.contains('right-panel-closed')) {
+      openNowPlayingPanel();
+    } else {
+      closeNowPlayingPanel();
+    }
+  }
+
   function setupRightPanel() {
     const btnNpPlayPause = document.getElementById('btn-np-play-pause');
     const btnNpPrev = document.getElementById('btn-np-prev');
@@ -878,10 +909,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnToggleNpPanel) {
       btnToggleNpPanel.addEventListener('click', () => {
-        const panel = document.getElementById('panel-now-playing');
-        if (panel) {
-          panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-        }
+        closeNowPlayingPanel();
+      });
+    }
+
+    const btnToggleNpTopbar = document.getElementById('btn-toggle-np-topbar');
+    if (btnToggleNpTopbar) {
+      btnToggleNpTopbar.addEventListener('click', () => {
+        toggleNowPlayingPanel();
+      });
+    }
+
+    const btnReopenNpBar = document.getElementById('btn-reopen-np-bar');
+    if (btnReopenNpBar) {
+      btnReopenNpBar.addEventListener('click', () => {
+        openNowPlayingPanel();
+      });
+    }
+
+    if (playerThumb) {
+      playerThumb.addEventListener('click', () => {
+        openNowPlayingPanel();
+      });
+    }
+
+    if (playerTitle) {
+      playerTitle.addEventListener('click', () => {
+        openNowPlayingPanel();
       });
     }
   }
