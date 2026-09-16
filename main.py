@@ -97,8 +97,15 @@ def clean_html(raw_html: str) -> str:
     )
 
 
+EXCLUDED_INDIAN_LANGUAGES = {
+    "hindi", "punjabi", "telugu", "tamil", "bhojpuri", "malayalam",
+    "marathi", "bengali", "kannada", "gujarati", "urdu", "rajasthani",
+    "odia", "assamese", "haryanvi", "sanskrit"
+}
+
+
 def search_saavn(query: str, limit: int = 20) -> List[Dict[str, Any]]:
-    """Search JioSaavn library for high quality songs."""
+    """Search JioSaavn library for high quality songs (filtered from Indian/Bollywood languages)."""
     encoded_q = urllib.parse.quote(query)
     url = f"https://www.jiosaavn.com/api.php?__call=search.getResults&_marker=0&q={encoded_q}&ctx=web6dot0&_format=json&p=1&n={limit}"
     headers = {
@@ -113,6 +120,11 @@ def search_saavn(query: str, limit: int = 20) -> List[Dict[str, Any]]:
             data = resp.json()
             results = data.get("results", [])
             for item in results:
+                # Exclude Indian / Bollywood languages
+                lang = (item.get("language") or item.get("more_info", {}).get("language") or "").lower().strip()
+                if lang in EXCLUDED_INDIAN_LANGUAGES:
+                    continue
+
                 enc_url = item.get("encrypted_media_url")
                 stream_320 = decrypt_saavn_url(enc_url, "320")
                 stream_160 = decrypt_saavn_url(enc_url, "160")
@@ -457,37 +469,143 @@ async def api_spotify_user_playlists():
     return results
 
 
+CURATED_PLAYLISTS = {
+    "featured-global": {
+        "id": "featured-global",
+        "title": "🔥 Top Global Billboard Hits",
+        "subtitle": "Koleksi hits internasional terpopuler (Bruno Mars, Billie Eilish, Taylor Swift, dll.)",
+        "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&q=80",
+        "queries": [
+            ("Die With A Smile", "Lady Gaga, Bruno Mars", 251),
+            ("BIRDS OF A FEATHER", "Billie Eilish", 183),
+            ("Cruel Summer", "Taylor Swift", 178),
+            ("Espresso", "Sabrina Carpenter", 175),
+            ("Blinding Lights", "The Weeknd", 200),
+            ("Viva La Vida", "Coldplay", 242),
+            ("Beautiful Things", "Benson Boone", 180),
+            ("As It Was", "Harry Styles", 167),
+            ("greedy", "Tate McRae", 131),
+            ("Flowers", "Miley Cyrus", 200),
+            ("Stay", "The Kid LAROI, Justin Bieber", 141),
+            ("Levitating", "Dua Lipa", 203),
+        ]
+    },
+    "featured-indo": {
+        "id": "featured-indo",
+        "title": "🇮🇩 Indonesian Top Hits",
+        "subtitle": "Koleksi hits terpopuler musisi tanah air (Bernadya, Tulus, Hindia, Nadin, dll.)",
+        "cover": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80",
+        "queries": [
+            ("Untungnya, Hidup Harus Tetap Berjalan", "Bernadya", 217),
+            ("Rayuan Perempuan Gila", "Nadin Amizah", 312),
+            ("Lebih Indah", "Adera", 258),
+            ("Hati-Hati di Jalan", "Tulus", 242),
+            ("Evaluasi", "Hindia", 235),
+            ("Sial", "Mahalini", 243),
+            ("Komang", "Raim Laode", 239),
+            ("Remaja", "HiVi!", 218),
+            ("Adu Rayu", "Yovie Widianto, Tulus, Glenn Fredly", 207),
+            ("Asing", "Juicy Luicy", 210),
+            ("Kisah Sempurna", "Mahalini", 276),
+            ("Rumah ke Rumah", "Hindia", 277),
+        ]
+    },
+    "featured-chill": {
+        "id": "featured-chill",
+        "title": "☕ Chill & Lofi Vibes",
+        "subtitle": "Lagu santai untuk fokus, belajar, ngopi, dan relaksasi",
+        "cover": "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=500&q=80",
+        "queries": [
+            ("Glimpse of Us", "Joji", 233),
+            ("Beside You", "keshi", 166),
+            ("Every Summertime", "NIKI", 215),
+            ("comethru", "Jeremy Zucker", 181),
+            ("Sanctuary", "Joji", 180),
+            ("death bed (coffee for your head)", "Powfu, beabadoobee", 173),
+            ("Sunday Best", "Surfaces", 158),
+            ("Location Unknown", "HONNE", 298),
+            ("Double Take", "dhruv", 171),
+            ("Until I Found You", "Stephen Sanchez", 177),
+            ("Paris in the Rain", "Lauv", 205),
+            ("Best Part", "Daniel Caesar, H.E.R.", 209),
+        ]
+    },
+    "featured-rock": {
+        "id": "featured-rock",
+        "title": "🎸 Rock & Classic Legends",
+        "subtitle": "Karya legendaris abadi sepanjang masa tanpa batas zaman",
+        "cover": "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=500&q=80",
+        "queries": [
+            ("Bohemian Rhapsody", "Queen", 354),
+            ("Yellow", "Coldplay", 269),
+            ("Don't Look Back In Anger", "Oasis", 288),
+            ("Boulevard of Broken Dreams", "Green Day", 262),
+            ("Creep", "Radiohead", 238),
+            ("Numb", "Linkin Park", 187),
+            ("Smells Like Teen Spirit", "Nirvana", 301),
+            ("Sweet Child O' Mine", "Guns N' Roses", 356),
+            ("Wonderwall", "Oasis", 258),
+            ("In The End", "Linkin Park", 216),
+            ("Hotel California", "Eagles", 391),
+            ("Fix You", "Coldplay", 295),
+        ]
+    }
+}
+
+
+@app.get("/api/playlist/curated")
+async def api_playlist_curated(id: str = Query(...)):
+    """Get curated Western or Indonesian playlist without any Indian tracks."""
+    if id in CURATED_PLAYLISTS:
+        data = CURATED_PLAYLISTS[id]
+        tracks = []
+        for idx, (title, artist, dur) in enumerate(data["queries"]):
+            tracks.append({
+                "id": f"cur_{id}_{idx}",
+                "source": "curated",
+                "title": title,
+                "artist": artist,
+                "album": data["title"],
+                "duration": dur,
+                "duration_str": format_duration(dur),
+                "image": data["cover"],
+                "stream_url": None,
+            })
+        return {
+            "id": id,
+            "title": data["title"],
+            "subtitle": data["subtitle"],
+            "cover": data["cover"],
+            "track_count": len(tracks),
+            "tracks": tracks,
+        }
+    raise HTTPException(status_code=404, detail="Playlist tidak ditemukan")
+
+
 @app.get("/api/featured")
 async def api_featured():
-    """Curated initial music sections with Spotify user playlists."""
-    cache_key = "featured_home_v2"
-    if cache_key in _SEARCH_CACHE:
-        return _SEARCH_CACHE[cache_key]
-
-    sections = [
-        {
-            "category": "🔥 Trending Global",
-            "subtitle": "Lagu terpopuler saat ini di seluruh dunia",
-            "tracks": search_saavn("Top Global Hits 2026", limit=6) or search_saavn("Die With A Smile", limit=6)
-        },
-        {
-            "category": "🇮🇩 Indonesian Top Hits",
-            "subtitle": "Hits terbaik dan terhangat dari musisi Indonesia",
-            "tracks": search_saavn("Lagu Indonesia Populer", limit=6) or search_saavn("Komang Raim Laode", limit=6)
-        },
-        {
-            "category": "☕ Chill & Lofi Vibes",
-            "subtitle": "Musik santai untuk fokus kerja, belajar, atau istirahat",
-            "tracks": search_saavn("Chill Lofi Beats", limit=6) or search_saavn("Lofi Sleep", limit=6)
-        },
-        {
-            "category": "🎸 Rock & Classic Legends",
-            "subtitle": "Karya legendaris abadi sepanjang masa",
-            "tracks": search_saavn("Queen Bohemian Rhapsody", limit=6) or search_saavn("Coldplay Yellow", limit=6)
-        }
-    ]
-
-    _SEARCH_CACHE[cache_key] = sections
+    """Curated initial music sections (100% Western & Indonesian, NO Indian music)."""
+    sections = []
+    for pl_id, data in CURATED_PLAYLISTS.items():
+        tracks = []
+        for idx, (title, artist, dur) in enumerate(data["queries"][:6]):
+            tracks.append({
+                "id": f"cur_{pl_id}_{idx}",
+                "source": "curated",
+                "title": title,
+                "artist": artist,
+                "album": data["title"],
+                "duration": dur,
+                "duration_str": format_duration(dur),
+                "image": data["cover"],
+                "stream_url": None,
+            })
+        sections.append({
+            "id": pl_id,
+            "category": data["title"],
+            "subtitle": data["subtitle"],
+            "tracks": tracks,
+        })
     return sections
 
 

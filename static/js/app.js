@@ -212,8 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.currentTrack = track;
 
-    // Check if track is from Spotify and streamUrl needs resolving
-    if (track.source === 'spotify' && !track.stream_url) {
+    // Check if track is from Spotify or Curated and streamUrl needs resolving
+    if ((track.source === 'spotify' || track.source === 'curated') && !track.stream_url) {
       playerTitle.textContent = track.title || 'Unknown Title';
       playerArtist.textContent = (track.artist || 'Unknown Artist') + ' • Mengambil audio 320k...';
       playerThumb.src = track.image || '/static/images/default-album.svg';
@@ -953,31 +953,37 @@ document.addEventListener('DOMContentLoaded', () => {
   function openCuratedPlaylist(playlistId, title) {
     state.activePlaylistId = playlistId;
     document.getElementById('playlist-hero-title').textContent = title;
-    document.getElementById('playlist-hero-desc').textContent = 'Koleksi pilihan Spotify KW';
+    document.getElementById('playlist-hero-desc').textContent = 'Koleksi pilihan Spotify KW (100% Kualitas 320kbps)';
     document.getElementById('playlist-meta-type').textContent = 'PLAYLIST TERKURASI';
+    document.getElementById('playlist-cover-img').src = '/static/images/default-album.svg';
+    document.getElementById('playlist-tracklist-items').innerHTML = `
+      <div class="loading-spinner-box">
+        <div class="spinner"></div>
+        <span>Memuat daftar lagu pilihan...</span>
+      </div>
+    `;
+    switchView('playlist');
 
-    // Find tracks from featured cache or search
-    const queryMap = {
-      'featured-global': 'Top Global Hits 2026',
-      'featured-indo': 'Lagu Indonesia Populer',
-      'featured-chill': 'Chill Lofi Beats',
-      'featured-rock': 'Rock Classics',
-    };
-    const q = queryMap[playlistId] || title;
-
-    fetch(`/api/search?q=${encodeURIComponent(q)}&limit=30`)
+    fetch(`/api/playlist/curated?id=${encodeURIComponent(playlistId)}`)
       .then(r => r.json())
-      .then(d => {
-        const tracks = d.results || [];
-        state.currentPlaylistTracks = tracks;
-        document.getElementById('playlist-track-count').textContent = `${tracks.length} lagu`;
-        if (tracks.length > 0) {
-          document.getElementById('playlist-cover-img').src = tracks[0].image;
+      .then(pl => {
+        state.currentPlaylistTracks = pl.tracks || [];
+        document.getElementById('playlist-hero-title').textContent = pl.title || title;
+        document.getElementById('playlist-hero-desc').textContent = pl.subtitle || 'Koleksi pilihan Spotify KW';
+        document.getElementById('playlist-track-count').textContent = `${state.currentPlaylistTracks.length} lagu`;
+        if (pl.cover) {
+          document.getElementById('playlist-cover-img').src = pl.cover;
         }
-        renderPlaylistTable(tracks);
-        switchView('playlist');
+        renderPlaylistTable(state.currentPlaylistTracks);
       })
-      .catch(e => console.error(e));
+      .catch(e => {
+        console.error(e);
+        document.getElementById('playlist-tracklist-items').innerHTML = `
+          <div style="text-align: center; padding: 48px; color: var(--text-subdued);">
+            Gagal memuat playlist terkurasi.
+          </div>
+        `;
+      });
   }
 
   async function openSpotifyPlaylist(playlistIdOrUrl) {
