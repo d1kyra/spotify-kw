@@ -954,8 +954,9 @@ if __name__ == "__main__":
 
     print("=" * 60)
     print("  [>] Spotify KW - Ultra-Lightweight Edition")
-    print(f"  [*] Running at: http://127.0.0.1:{port}")
+    print(f"  [*] Local access:   http://127.0.0.1:{port}")
+    print(f"  [*] Network access: http://0.0.0.0:{port} (Bisa dibuka HP / PC lain di Wi-Fi yang sama)")
     print("  [*] Minimal RAM & Storage Consumption (<70MB RAM)")
     print("=" * 60)
     
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
