@@ -59,6 +59,7 @@
             <span class="lib-item-title">Liked Songs</span>
             <span class="lib-item-sub"><span class="pin-icon">📌</span> Playlist • Dikiwi</span>
           </div>
+          <span class="count-badge" id="liked-count-badge">0</span>
         </div>
 
         <!-- Offline Downloaded (0 Internet) -->
@@ -237,11 +238,11 @@
         <!-- Centered Home Button Pill + Search Pill -->
         <div class="topbar-center-wrap">
           <button class="topbar-home-btn active" id="nav-home" title="Beranda">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33zm-8.32 3.67 7.82-4.515a2 2 0 0 1 2 0l7.82 4.515A1 1 0 0 1 22 7.747V21a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-5h-2v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.747a1 1 0 0 1 .68-.93z"/></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3.5L3 11v9a1 1 0 0 0 1 1h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5a1 1 0 0 0 1-1v-9L12 3.5z"/></svg>
           </button>
 
           <div class="topbar-search-pill" id="topbar-search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+            <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10.5 3a7.5 7.5 0 0 1 5.964 12.048l4.244 4.245-1.414 1.414-4.245-4.244A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg>
             <input type="text" id="global-search-input" placeholder="What do you want to play?" autocomplete="off" />
             <button class="search-clear-btn" id="btn-clear-search" style="display: none;">&times;</button>
             <div class="search-pill-right-icon" id="btn-browse-category" title="Browse / Kategori">
@@ -301,6 +302,20 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- 3 PLAYLIST SERING DIDENGAR SECTION -->
+          <div class="content-section" id="section-top-playlists">
+            <div class="section-header-row">
+              <div>
+                <h2 class="section-title">Playlist yang Sering Didengar</h2>
+                <div class="section-subtext">3 playlist teratas yang paling sering kamu nikmati</div>
+              </div>
+              <button class="btn-show-all" data-target="top-playlists">Show all</button>
+            </div>
+            <div class="cards-grid-top3" id="grid-top-playlists">
+              <!-- 3 Top Playlists rendered dynamically -->
             </div>
           </div>
 

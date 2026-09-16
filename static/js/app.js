@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     visualizerAnimationId: null,
     currentPlaylistTracks: [],
     downloadedTracks: [],
+    activePlaylistTitle: 'gen z songs english',
   };
 
+  let isDraggingNpSeek = false;
   let trackToAddToPlaylist = null;
   let downloadPollInterval = null;
 
@@ -751,8 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // RIGHT COLUMN (NOW PLAYING & VINYL ENGINE)
   // ==========================================
-  let isDraggingNpSeek = false;
-
   function setupRightPanel() {
     const btnNpPlayPause = document.getElementById('btn-np-play-pause');
     const btnNpPrev = document.getElementById('btn-np-prev');
@@ -826,6 +826,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetTime = (npSeekSlider.value / 100) * audio.duration;
         audio.currentTime = targetTime;
       });
+
+      window.addEventListener('mouseup', () => { isDraggingNpSeek = false; });
+      window.addEventListener('touchend', () => { isDraggingNpSeek = false; });
     }
 
     // Volume
@@ -896,6 +899,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const npAboutArtistName = document.getElementById('np-about-artist-name');
     const npAboutArtistListeners = document.getElementById('np-about-artist-listeners');
     const npAboutArtistDesc = document.getElementById('np-about-artist-desc');
+    const npTotalDuration = document.getElementById('np-total-duration');
+    const npCurrentTime = document.getElementById('np-current-time');
+    const npSeekSlider = document.getElementById('np-seek-slider');
+    const npSeekFill = document.getElementById('np-seek-fill');
 
     const cover = track.image || '/static/images/default-album.svg';
     const title = track.title || 'Unknown Title';
@@ -906,18 +913,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (npTrackArtist) npTrackArtist.textContent = artist;
     if (npCardTrackTitle) npCardTrackTitle.textContent = title;
     if (npCardTrackArtist) npCardTrackArtist.textContent = artist;
-    if (npVinylCover) npVinylCover.src = cover;
-    if (npLargeArtImg) npLargeArtImg.src = cover;
+    if (npVinylCover) {
+      npVinylCover.src = cover;
+      npVinylCover.onerror = () => { npVinylCover.src = '/static/images/default-album.svg'; };
+    }
+    if (npLargeArtImg) {
+      npLargeArtImg.src = cover;
+      npLargeArtImg.onerror = () => { npLargeArtImg.src = '/static/images/default-album.svg'; };
+    }
 
     if (npContextTitle) {
-      npContextTitle.textContent = state.activePlaylistId
-        ? (document.getElementById('playlist-hero-title')?.textContent || 'Playlist')
-        : (track.album || 'Now Playing');
+      npContextTitle.textContent = state.activePlaylistTitle
+        || (state.activePlaylistId ? (document.getElementById('playlist-hero-title')?.textContent || 'Playlist') : (track.album || 'Now Playing'));
     }
 
     if (npAboutArtistName) npAboutArtistName.textContent = primaryArtist;
     if (npArtistBanner) {
-      npArtistBanner.style.backgroundImage = `url('${cover}')`;
+      npArtistBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.85)), url('${cover}')`;
+    }
+
+    if (track.duration_str) {
+      if (npTotalDuration) npTotalDuration.textContent = track.duration_str;
+    } else if (track.duration) {
+      if (npTotalDuration) npTotalDuration.textContent = formatTime(track.duration);
     }
 
     // Deterministic monthly listeners based on artist name
@@ -931,8 +949,11 @@ document.addEventListener('DOMContentLoaded', () => {
       npAboutArtistListeners.textContent = `${listeners.toLocaleString()} monthly listeners`;
     }
     if (npAboutArtistDesc) {
-      npAboutArtistDesc.textContent = `${primaryArtist} adalah musisi dengan karya populer yang dinikmati jutaan penggemar setiap bulannya.`;
+      npAboutArtistDesc.textContent = `${primaryArtist} adalah musisi dengan karya populer yang dinikmati jutaan penggemar setiap bulannya di Spotify KW.`;
     }
+
+    // Keep icons in sync with play state
+    updatePlayPauseIcons();
   }
 
   function setupInitialRightPanelPreview() {
@@ -1295,6 +1316,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         card.addEventListener('click', item.action);
         quickGrid.appendChild(card);
+      });
+    }
+
+    // 1.5. POPULATE 3 PLAYLIST SERING DIDENGAR (Gambar 3)
+    const gridTopPlaylists = document.getElementById('grid-top-playlists');
+    const topPlaylistsData = [
+      {
+        id: '4OmI8xAbhvqDcuKaLkEaN0',
+        title: 'gen z songs english',
+        badge: '🔥 TOP #1 • 2.4M PENDENGAR',
+        desc: 'Old Love, golden hour, Until I Found You, Here With Me, Glimpse of Us & lagu hits Gen Z terpopuler.',
+        meta: '60 lagu • Sering didengar',
+        cover: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&q=80',
+        action: () => openSpotifyPlaylist('4OmI8xAbhvqDcuKaLkEaN0')
+      },
+      {
+        id: '1gAv5vmayVaCxbxSX7KmQj',
+        title: 'Indo Happy Playlist',
+        badge: '🇮🇩 FAVORIT KAMU • 1.8M PENDENGAR',
+        desc: 'Pilihan musik Indonesia paling asik: Bunga Citra Lestari, Afgan, Tulus, Dewa 19, Rizky Febian.',
+        meta: '50 lagu • Sering didengar',
+        cover: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&q=80',
+        action: () => openSpotifyPlaylist('1gAv5vmayVaCxbxSX7KmQj')
+      },
+      {
+        id: 'cur-hipdut',
+        title: 'HIPDUT VIRAL ASIK',
+        badge: '⚡ TRENDING MINGGUAN • 3.1M PENDENGAR',
+        desc: 'Koplo hits dan dangdut viral TikTok: Rungkad, Nemen, Ginio, Dumes, Cundamani, Kisinan.',
+        meta: '45 lagu • Sering didengar',
+        cover: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=80',
+        action: () => openCuratedPlaylist('cur-hipdut', 'HIPDUT VIRAL ASIK')
+      }
+    ];
+
+    if (gridTopPlaylists) {
+      gridTopPlaylists.innerHTML = '';
+      topPlaylistsData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'top-playlist-card';
+        card.innerHTML = `
+          <div class="top-pl-cover-box">
+            <span class="top-pl-badge">${escapeHtml(item.badge)}</span>
+            <img src="${item.cover}" alt="${escapeHtml(item.title)}" loading="lazy" />
+            <button class="top-pl-play-btn" title="Putar Playlist">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="black"><polygon points="7,5 19,12 7,19"/></svg>
+            </button>
+          </div>
+          <div class="top-pl-info">
+            <h3 class="top-pl-title">${escapeHtml(item.title)}</h3>
+            <p class="top-pl-desc">${escapeHtml(item.desc)}</p>
+            <div class="top-pl-meta-row">
+              <span>${escapeHtml(item.meta)}</span>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', item.action);
+        gridTopPlaylists.appendChild(card);
       });
     }
 
@@ -2027,6 +2106,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openCuratedPlaylist(playlistId, title) {
     state.activePlaylistId = playlistId;
+    state.activePlaylistTitle = title;
+    const npCtx = document.getElementById('np-context-title');
+    if (npCtx) npCtx.textContent = title;
     document.getElementById('playlist-hero-title').textContent = title;
     document.getElementById('playlist-hero-desc').textContent = 'Koleksi pilihan Spotify KW (100% Kualitas 320kbps)';
     document.getElementById('playlist-meta-type').textContent = 'PLAYLIST TERKURASI';
@@ -2099,6 +2181,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const resp = await fetch(`/api/spotify/playlist?url=${encodeURIComponent(playlistIdOrUrl)}`);
       const pl = await resp.json();
+
+      state.activePlaylistTitle = pl.title || 'Playlist Spotify';
+      const npCtx = document.getElementById('np-context-title');
+      if (npCtx) npCtx.textContent = state.activePlaylistTitle;
 
       document.getElementById('playlist-hero-title').textContent = pl.title || 'Playlist Spotify';
       document.getElementById('playlist-hero-desc').textContent = pl.subtitle ? `Dibuat oleh ${pl.subtitle} • 100% Kualitas 320kbps` : 'Playlist Spotify';
@@ -2245,20 +2331,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // SYNCHRONIZED LYRICS (KARAOKE)
   // ==========================================
   function setupLyrics() {
-    btnToggleLyrics.addEventListener('click', () => {
-      state.lyricsOpen = !state.lyricsOpen;
-      lyricsOverlay.style.display = state.lyricsOpen ? 'flex' : 'none';
-      btnToggleLyrics.classList.toggle('active', state.lyricsOpen);
-      if (state.lyricsOpen && state.currentTrack) {
-        updateSyncedLyrics(audio.currentTime);
-      }
-    });
+    if (btnToggleLyrics) {
+      btnToggleLyrics.addEventListener('click', () => {
+        state.lyricsOpen = !state.lyricsOpen;
+        if (lyricsOverlay) lyricsOverlay.style.display = state.lyricsOpen ? 'flex' : 'none';
+        btnToggleLyrics.classList.toggle('active', state.lyricsOpen);
+        if (state.lyricsOpen && state.currentTrack) {
+          updateSyncedLyrics(audio.currentTime);
+        }
+      });
+    }
 
-    btnCloseLyrics.addEventListener('click', () => {
-      state.lyricsOpen = false;
-      lyricsOverlay.style.display = 'none';
-      btnToggleLyrics.classList.remove('active');
-    });
+    if (btnCloseLyrics) {
+      btnCloseLyrics.addEventListener('click', () => {
+        state.lyricsOpen = false;
+        if (lyricsOverlay) lyricsOverlay.style.display = 'none';
+        if (btnToggleLyrics) btnToggleLyrics.classList.remove('active');
+      });
+    }
   }
 
   async function loadLyrics(track) {
@@ -2379,25 +2469,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setupVisualizer() {
-    btnToggleVisualizer.addEventListener('click', () => {
-      state.visualizerOpen = !state.visualizerOpen;
-      visualizerOverlay.style.display = state.visualizerOpen ? 'flex' : 'none';
-      btnToggleVisualizer.classList.toggle('active', state.visualizerOpen);
+    if (btnToggleVisualizer) {
+      btnToggleVisualizer.addEventListener('click', () => {
+        state.visualizerOpen = !state.visualizerOpen;
+        if (visualizerOverlay) visualizerOverlay.style.display = state.visualizerOpen ? 'flex' : 'none';
+        btnToggleVisualizer.classList.toggle('active', state.visualizerOpen);
 
-      if (state.visualizerOpen) {
-        initWebAudio();
-        startVisualizerLoop();
-      } else {
+        if (state.visualizerOpen) {
+          initWebAudio();
+          startVisualizerLoop();
+        } else {
+          cancelAnimationFrame(state.visualizerAnimationId);
+        }
+      });
+    }
+
+    if (btnCloseVisualizer) {
+      btnCloseVisualizer.addEventListener('click', () => {
+        state.visualizerOpen = false;
+        if (visualizerOverlay) visualizerOverlay.style.display = 'none';
+        if (btnToggleVisualizer) btnToggleVisualizer.classList.remove('active');
         cancelAnimationFrame(state.visualizerAnimationId);
-      }
-    });
-
-    btnCloseVisualizer.addEventListener('click', () => {
-      state.visualizerOpen = false;
-      visualizerOverlay.style.display = 'none';
-      btnToggleVisualizer.classList.remove('active');
-      cancelAnimationFrame(state.visualizerAnimationId);
-    });
+      });
+    }
 
     // Resize canvas dynamically
     window.addEventListener('resize', resizeVisualizerCanvas);
@@ -2457,44 +2551,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnScanDefault = document.getElementById('btn-scan-default-music');
     const dropZone = document.getElementById('drag-drop-zone');
     const fileInput = document.getElementById('file-input-direct');
+    const localFileInput = document.getElementById('local-file-input');
+    const localFolderInput = document.getElementById('local-folder-input');
 
-    btnBrowse.addEventListener('click', async () => {
-      try {
-        const r = await fetch('/api/open-folder');
-        const d = await r.json();
-        if (d.success && d.path) {
-          scanLocalFolder(d.path);
+    if (btnBrowse) {
+      btnBrowse.addEventListener('click', async () => {
+        try {
+          const r = await fetch('/api/open-folder');
+          const d = await r.json();
+          if (d.success && d.path) {
+            scanLocalFolder(d.path);
+          }
+        } catch (e) {
+          console.warn('Folder picker error:', e);
         }
-      } catch (e) {
-        console.warn('Folder picker error:', e);
-      }
-    });
+      });
+    }
 
-    btnScanDefault.addEventListener('click', () => {
-      scanLocalFolder(null);
-    });
+    if (btnScanDefault) {
+      btnScanDefault.addEventListener('click', () => {
+        scanLocalFolder(null);
+      });
+    }
 
     // Drag & Drop
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
+    if (dropZone) {
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
 
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
 
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/') || /\.(mp3|flac|wav|m4a|ogg)$/i.test(f.name));
-      handleDroppedAudioFiles(files);
-    });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/') || /\.(mp3|flac|wav|m4a|ogg)$/i.test(f.name));
+        handleDroppedAudioFiles(files);
+      });
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
-      handleDroppedAudioFiles(Array.from(e.target.files));
-    });
+      if (fileInput) {
+        dropZone.addEventListener('click', () => fileInput.click());
+      }
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        handleDroppedAudioFiles(Array.from(e.target.files));
+      });
+    }
+
+    if (localFileInput) {
+      localFileInput.addEventListener('change', (e) => {
+        handleDroppedAudioFiles(Array.from(e.target.files));
+      });
+    }
+
+    if (localFolderInput) {
+      localFolderInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files).filter(f => f.type.startsWith('audio/') || /\.(mp3|flac|wav|m4a|ogg)$/i.test(f.name));
+        handleDroppedAudioFiles(files);
+      });
+    }
   }
 
   async function scanLocalFolder(path) {
@@ -2510,24 +2630,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await resp.json();
 
       state.localSongs = data.songs || [];
-      localCountBadge.textContent = state.localSongs.length;
+      if (localCountBadge) localCountBadge.textContent = state.localSongs.length;
 
-      folderStatus.style.display = 'flex';
-      pathLabel.textContent = data.folder || 'Folder Musik';
-      countText.textContent = `${state.localSongs.length} lagu ditemukan`;
+      if (folderStatus) folderStatus.style.display = 'flex';
+      if (pathLabel) pathLabel.textContent = data.folder || 'Folder Musik';
+      if (countText) countText.textContent = `${state.localSongs.length} lagu ditemukan`;
 
-      tracklistContainer.style.display = 'flex';
-      tracklistItems.innerHTML = '';
+      if (tracklistContainer) tracklistContainer.style.display = 'flex';
+      if (tracklistItems) {
+        tracklistItems.innerHTML = '';
+        if (state.localSongs.length === 0) {
+          tracklistItems.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-subdued);">Tidak ditemukan file audio (.mp3, .wav, .flac) di folder ini.</div>';
+          return;
+        }
 
-      if (state.localSongs.length === 0) {
-        tracklistItems.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-subdued);">Tidak ditemukan file audio (.mp3, .wav, .flac) di folder ini.</div>';
-        return;
+        state.localSongs.forEach((song, i) => {
+          const row = createTrackRow(song, i + 1, state.localSongs);
+          tracklistItems.appendChild(row);
+        });
       }
-
-      state.localSongs.forEach((song, i) => {
-        const row = createTrackRow(song, i + 1, state.localSongs);
-        tracklistItems.appendChild(row);
-      });
     } catch (e) {
       console.error('Scan error:', e);
     }
@@ -2572,23 +2693,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // QUEUE DRAWER
   // ==========================================
-  btnToggleQueue.addEventListener('click', () => {
-    state.queueOpen = !state.queueOpen;
-    queueDrawer.style.display = state.queueOpen ? 'flex' : 'none';
-    btnToggleQueue.classList.toggle('active', state.queueOpen);
-    if (state.queueOpen) updateQueueUI();
-  });
+  if (btnToggleQueue) {
+    btnToggleQueue.addEventListener('click', () => {
+      state.queueOpen = !state.queueOpen;
+      if (queueDrawer) queueDrawer.style.display = state.queueOpen ? 'flex' : 'none';
+      btnToggleQueue.classList.toggle('active', state.queueOpen);
+      if (state.queueOpen) updateQueueUI();
+    });
+  }
 
-  btnCloseQueue.addEventListener('click', () => {
-    state.queueOpen = false;
-    queueDrawer.style.display = 'none';
-    btnToggleQueue.classList.remove('active');
-  });
+  if (btnCloseQueue) {
+    btnCloseQueue.addEventListener('click', () => {
+      state.queueOpen = false;
+      if (queueDrawer) queueDrawer.style.display = 'none';
+      if (btnToggleQueue) btnToggleQueue.classList.remove('active');
+    });
+  }
 
-  btnClearQueue.addEventListener('click', () => {
-    state.queue = [];
-    updateQueueUI();
-  });
+  if (btnClearQueue) {
+    btnClearQueue.addEventListener('click', () => {
+      state.queue = [];
+      updateQueueUI();
+    });
+  }
 
   function updateQueueUI() {
     if (!state.queueOpen) return;
@@ -2648,21 +2775,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchStats, 3500);
 
     // Open Modal
-    ramPill.addEventListener('click', openStatsModal);
-    btnOpenStatsModal.addEventListener('click', openStatsModal);
-    btnCloseStatsModal.addEventListener('click', () => { statsModal.style.display = 'none'; });
+    if (ramPill) ramPill.addEventListener('click', openStatsModal);
+    if (btnOpenStatsModal) btnOpenStatsModal.addEventListener('click', openStatsModal);
+    if (btnCloseStatsModal) btnCloseStatsModal.addEventListener('click', () => { if (statsModal) statsModal.style.display = 'none'; });
 
     // Clear Cache Button
-    btnClearCache.addEventListener('click', async () => {
-      try {
-        const resp = await fetch('/api/cache/clear', { method: 'POST' });
-        const res = await resp.json();
-        alert(res.message || 'Cache berhasil dibersihkan!');
-        fetchStats();
-      } catch (e) {
-        console.warn('Clear cache err:', e);
-      }
-    });
+    if (btnClearCache) {
+      btnClearCache.addEventListener('click', async () => {
+        try {
+          const resp = await fetch('/api/cache/clear', { method: 'POST' });
+          const res = await resp.json();
+          alert(res.message || 'Cache berhasil dibersihkan!');
+          fetchStats();
+        } catch (e) {
+          console.warn('Clear cache err:', e);
+        }
+      });
+    }
   }
 
   async function fetchStats() {
@@ -2674,15 +2803,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const ramSaved = data.ram_saved_percent || 90;
 
       // Update sidebar badge
-      ramStatText.textContent = `RAM: ${ramMb} MB`;
-      ramSaveTag.textContent = `-${ramSaved}%`;
+      if (ramStatText) ramStatText.textContent = `RAM: ${ramMb} MB`;
+      if (ramSaveTag) ramSaveTag.textContent = `-${ramSaved}%`;
 
       // Update Modal if open
-      document.getElementById('modal-ram-val').textContent = ramMb;
-      document.getElementById('modal-ram-bar').style.width = `${Math.min(100, Math.max(8, (ramMb / 650) * 100))}%`;
-      document.getElementById('modal-ram-tag').textContent = `Hemat ${ramSaved}% RAM`;
-      document.getElementById('modal-storage-val').textContent = (data.cache_mb + 4.5).toFixed(1);
-      document.getElementById('modal-cache-size').textContent = `${data.cache_mb} MB`;
+      const mRamVal = document.getElementById('modal-ram-val');
+      if (mRamVal) mRamVal.textContent = ramMb;
+      const mRamBar = document.getElementById('modal-ram-bar');
+      if (mRamBar) mRamBar.style.width = `${Math.min(100, Math.max(8, (ramMb / 650) * 100))}%`;
+      const mRamTag = document.getElementById('modal-ram-tag');
+      if (mRamTag) mRamTag.textContent = `Hemat ${ramSaved}% RAM`;
+      const mStorageVal = document.getElementById('modal-storage-val');
+      if (mStorageVal) mStorageVal.textContent = (data.cache_mb + 4.5).toFixed(1);
+      const mCacheSize = document.getElementById('modal-cache-size');
+      if (mCacheSize) mCacheSize.textContent = `${data.cache_mb} MB`;
     } catch (e) {
       // Offline fallback
     }
