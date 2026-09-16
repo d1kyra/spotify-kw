@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <linearGradient id="gradLocal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3264" />
+      <stop offset="100%" stop-color="#121212" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" rx="16" fill="url(#gradLocal)"/>
+  <rect x="75" y="85" width="150" height="130" rx="10" fill="#282828" stroke="#3e4a68" stroke-width="2"/>
+  <path d="M75 105 L125 105 L145 125 L225 125 L225 215 L75 215 Z" fill="#222b3e"/>
+  <circle cx="150" cy="170" r="22" fill="#1ed760"/>
+  <polygon points="144,160 162,170 144,180" fill="#121212"/>
+</svg>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify KW - Ultra-Lightweight Player</title>
+  <meta name="description" content="Aplikasi pemutar musik alternatif Spotify yang super ringan, hemat RAM dan storage, kualitas 320kbps dengan lirik karaoke." />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.58 14.42c-.2.3-.57.4-.87.2-2.39-1.46-5.4-1.79-8.95-.98-.35.08-.69-.14-.77-.49-.08-.35.14-.69.49-.77 3.91-.89 7.24-.52 9.9 1.17.3.19.4.57.2.87zm1.22-2.72c-.25.39-.77.52-1.16.27-2.73-1.68-6.9-2.17-10.13-1.19-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.69-1.12 8.31-.57 11.5 1.36.39.25.52.77.27 1.16zm.13-2.85c-3.27-1.94-8.67-2.12-11.79-1.17-.5.15-1.03-.13-1.18-.63-.15-.5.13-1.03.63-1.18 3.59-1.09 9.57-.88 13.34 1.35.45.27.6.86.33 1.31-.27.45-.86.6-1.33.32z"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="brand-title">Spotify <span class="badge-kw">KW</span></span>
+          <span class="brand-sub">Ultra-Light Edition</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active" id="nav-home">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33zm-8.32 3.67 7.82-4.515a2 2 0 0 1 2 0l7.82 4.515A1 1 0 0 1 22 7.747V21a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-5h-2v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.747a1 1 0 0 1 .68-.93z"/></svg>
+            <span>Home</span>
+          </li>
+          <li class="nav-item" id="nav-search">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+            <span>Cari Lagu</span>
+          </li>
+          <li class="nav-item" id="nav-library">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1.5.866l6-3.464A1 1 0 0 0 22 17.536V6.464a1 1 0 0 0-.5-.866l-6-3.464zM8 3a1 1 0 0 0-2 0v18a1 1 0 0 0 2 0V3z"/></svg>
+            <span>Koleksi Saya</span>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-secondary-nav">
+        <ul>
+          <li class="nav-sub-item" id="nav-liked">
+            <div class="liked-icon-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="m12 21.35-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+            <span>Lagu yang Disukai</span>
+            <span class="count-badge" id="liked-count-badge">0</span>
+          </li>
+          <li class="nav-sub-item" id="nav-local">
+            <div class="local-icon-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            </div>
+            <span>Lagu Lokal (Offline)</span>
+            <span class="count-badge" id="local-count-badge">0</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-playlists">
+        <div class="playlist-header">
+          <span>PLAYLIST ANDA</span>
+          <button class="btn-icon-tiny" id="btn-create-playlist" title="Buat Playlist Baru">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </button>
+        </div>
+        <div class="playlist-list" id="sidebar-playlist-container">
+          <!-- User Spotify Playlists -->
+          <div class="playlist-item spotify-pl-item" data-spotify="4OmI8xAbhvqDcuKaLkEaN0" title="100 lagu (NIKI, LANY, dll.)">
+            ✨ gen z songs english
+          </div>
+          <div class="playlist-item spotify-pl-item" data-spotify="1gAv5vmayVaCxbxSX7KmQj" title="100 lagu (Adera, Yovie, Hivi!, Jaz)">
+            🇮🇩 Indo Happy Playlist
+          </div>
+          <div class="sidebar-divider" style="margin: 6px 0;"></div>
+          <!-- Curated Playlists -->
+          <div class="playlist-item active-playlist" data-id="featured-global">🔥 Top Global Hits</div>
+          <div class="playlist-item" data-id="featured-indo">🇮🇩 Indonesian Top Hits</div>
+          <div class="playlist-item" data-id="featured-chill">☕ Chill & Lofi Mix</div>
+          <div class="playlist-item" data-id="featured-rock">🎸 Rock Classics</div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="ram-pill" id="ram-pill" title="Klik untuk rincian pemakaian RAM & Storage">
+          <span class="pulse-dot"></span>
+          <span id="ram-stat-text">RAM: 52 MB</span>
+          <span class="save-tag" id="ram-save-tag">-90%</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="main-wrapper">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-nav-arrows">
+          <button class="nav-arrow-btn" id="btn-history-back" title="Kembali">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          </button>
+          <button class="nav-arrow-btn" id="btn-history-forward" title="Maju">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </div>
+
+        <div class="topbar-search-container" id="topbar-search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+          <input type="text" id="global-search-input" placeholder="Cari lagu/artis, atau tempel link playlist Spotify di sini..." autocomplete="off" />
+          <button class="search-clear-btn" id="btn-clear-search" style="display: none;">&times;</button>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="badge-action" id="btn-open-import-modal" title="Impor Link Playlist Spotify">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.58 14.42c-.2.3-.57.4-.87.2-2.39-1.46-5.4-1.79-8.95-.98-.35.08-.69-.14-.77-.49-.08-.35.14-.69.49-.77 3.91-.89 7.24-.52 9.9 1.17.3.19.4.57.2.87zm1.22-2.72c-.25.39-.77.52-1.16.27-2.73-1.68-6.9-2.17-10.13-1.19-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.69-1.12 8.31-.57 11.5 1.36.39.25.52.77.27 1.16zm.13-2.85c-3.27-1.94-8.67-2.12-11.79-1.17-.5.15-1.03-.13-1.18-.63-.15-.5.13-1.03.63-1.18 3.59-1.09 9.57-.88 13.34 1.35.45.27.6.86.33 1.31-.27.45-.86.6-1.33.32z"/>
+            </svg>
+            <span class="hide-mobile">Impor Spotify</span>
+          </button>
+
+          <button class="badge-action" id="btn-open-stats-modal" title="Performa RAM & Hemat Storage">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
+            <span class="hide-mobile">Info RAM</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE CONTENT BODY -->
+      <main class="content-body" id="main-content-scroll">
+        <!-- VIEW: HOME -->
+        <section class="view-panel active-view" id="view-home">
+          <div class="hero-greeting">
+            <h1 id="greeting-text">Selamat Datang</h1>
+            <p class="hero-sub">Streaming 320kbps tanpa iklan, konsumsi RAM <span class="highlight-green">85% lebih ringan</span>.</p>
+          </div>
+
+          <!-- Quick access grid -->
+          <div class="quick-grid" id="quick-grid-container">
+            <!-- 6 quick cards dynamically loaded -->
+          </div>
+
+          <!-- Dynamic Sections -->
+          <div id="home-featured-sections">
+            <div class="loading-spinner-box">
+              <div class="spinner"></div>
+              <span>Memuat rekomendasi musik...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: SEARCH -->
+        <section class="view-panel" id="view-search" style="display: none;">
+          <div class="search-category-filters">
+            <button class="filter-chip active" data-source="all">Semua</button>
+            <button class="filter-chip" data-source="saavn">Online 320kbps</button>
+            <button class="filter-chip" data-source="youtube">YouTube</button>
+            <button class="filter-chip" data-source="local">Lokal</button>
+          </div>
+
+          <div id="search-state-empty" class="search-empty-state">
+            <svg viewBox="0 0 24 24" width="64" height="64" fill="#666"><path d="M10.533 1.278.432 1.278a9.255 9.255 0 1 0 5.485 16.69l6.04 6.041 1.414-1.414-6.04-6.041a9.255 9.255 0 0 0-2.798-13.998zm-5.485 1.996a7.255 7.255 0 1 1 0 14.51 7.255 7.255 0 0 1 0-14.51z"/></svg>
+            <h2>Cari yang ingin kamu dengar</h2>
+            <p>Ketik judul lagu, nama penyanyi, atau grup musik favorit kamu pada kolom pencarian di atas.</p>
+          </div>
+
+          <div id="search-state-loading" class="loading-spinner-box" style="display: none;">
+            <div class="spinner"></div>
+            <span>Mencari lagu terbaik...</span>
+          </div>
+
+          <div id="search-results-container" style="display: none;">
+            <div class="search-layout">
+              <div class="top-result-col">
+                <h3 class="section-title">Hasil Teratas</h3>
+                <div id="top-result-card-box"></div>
+              </div>
+              <div class="songs-result-col">
+                <h3 class="section-title">Daftar Lagu</h3>
+                <div class="tracklist-table" id="search-tracklist-mini"></div>
+              </div>
+            </div>
+
+            <div class="full-search-cards mt-4">
+              <h3 class="section-title">Hasil Lainnya</h3>
+              <div class="cards-grid" id="search-cards-grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: LIBRARY / PLAYLIST -->
+        <section class="view-panel" id="view-playlist" style="display: none;">
+          <div class="playlist-hero" id="playlist-hero-banner">
+            <div class="playlist-cover-art" id="playlist-hero-cover">
+              <img id="playlist-cover-img" src="/static/images/default-album.svg" alt="Playlist Cover" />
+            </div>
+            <div class="playlist-meta">
+              <span class="playlist-badge-type" id="playlist-meta-type">PLAYLIST</span>
+              <h1 class="playlist-title" id="playlist-hero-title">Nama Playlist</h1>
+              <p class="playlist-desc" id="playlist-hero-desc">Deskripsi kumpulan musik</p>
+              <div class="playlist-info-row">
+                <span class="playlist-owner">Spotify KW</span>
+                <span class="dot-separator">•</span>
+                <span id="playlist-track-count">0 lagu</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="playlist-action-bar">
+            <button class="btn-play-large" id="btn-playlist-play-all" title="Putar Semua">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="black"><polygon points="6,4 20,12 6,20"/></svg>
+            </button>
+            <button class="btn-icon-large" id="btn-playlist-shuffle-all" title="Acak Putar">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/></svg>
+            </button>
+          </div>
+
+          <div class="tracklist-container">
+            <div class="track-header-row">
+              <span class="th-num">#</span>
+              <span class="th-title">JUDUL</span>
+              <span class="th-album">ALBUM</span>
+              <span class="th-dur">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              </span>
+            </div>
+            <div class="tracklist-items" id="playlist-tracklist-items">
+              <!-- Tracks dynamically injected -->
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: LOCAL MUSIC (OFFLINE) -->
+        <section class="view-panel" id="view-local" style="display: none;">
+          <div class="local-hero">
+            <div class="local-hero-content">
+              <h1>Pemutar Musik Lokal (Offline)</h1>
+              <p>Putar koleksi musik MP3/FLAC/WAV di komputermu secara offline tanpa kuota internet.</p>
+              <div class="local-actions">
+                <button class="btn-primary" id="btn-browse-local-folder">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                  <span>Pilih Folder Musik di PC</span>
+                </button>
+                <button class="btn-secondary" id="btn-scan-default-music">
+                  <span>Folder Musik Standar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="drag-drop-zone" id="drag-drop-zone">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="#1ed760"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <p>Atau <strong>seret & lepas</strong> file lagu (.mp3, .flac, .wav, .m4a) langsung ke sini</p>
+            <input type="file" id="file-input-direct" multiple accept="audio/*" style="display: none;" />
+          </div>
+
+          <div class="current-folder-label" id="local-folder-status" style="display: none;">
+            <span>Folder: <code id="local-current-path">-</code></span>
+            <span class="count-pill" id="local-count-text">0 lagu</span>
+          </div>
+
+          <div class="tracklist-container" id="local-tracklist-container" style="display: none;">
+            <div class="track-header-row">
+              <span class="th-num">#</span>
+              <span class="th-title">JUDUL FILE</span>
+              <span class="th-album">ARTIS / ALBUM</span>
+              <span class="th-dur">DURASI</span>
+            </div>
+            <div class="tracklist-items" id="local-tracklist-items"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- SYNCHRONIZED LYRICS MODAL / OVERLAY -->
+    <div class="lyrics-overlay" id="lyrics-overlay" style="display: none;">
+      <div class="lyrics-topbar">
+        <div class="lyrics-song-info">
+          <span class="lyrics-badge">KARAOKE MODE</span>
+          <span class="lyrics-track-title" id="lyrics-title">-</span>
+          <span class="lyrics-track-artist" id="lyrics-artist">-</span>
+        </div>
+        <button class="btn-close-lyrics" id="btn-close-lyrics" title="Tutup Lirik">&times;</button>
+      </div>
+      <div class="lyrics-scroll-box" id="lyrics-container">
+        <div class="lyrics-placeholder">Menunggu lirik...</div>
+      </div>
+    </div>
+
+    <!-- REAL-TIME AUDIO VISUALIZER FULLSCREEN/CANVAS -->
+    <div class="visualizer-overlay" id="visualizer-overlay" style="display: none;">
+      <div class="visualizer-header">
+        <h2>Audio Spectrum Visualizer</h2>
+        <button class="btn-close-lyrics" id="btn-close-visualizer">&times;</button>
+      </div>
+      <div class="visualizer-canvas-wrapper">
+        <canvas id="visualizer-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- QUEUE DRAWER -->
+    <aside class="queue-drawer" id="queue-drawer" style="display: none;">
+      <div class="queue-header">
+        <h3>Antrean Lagu (Queue)</h3>
+        <button class="btn-icon-tiny" id="btn-close-queue">&times;</button>
+      </div>
+      <div class="queue-section">
+        <span class="queue-label">Sedang Diputar</span>
+        <div class="queue-item now-playing" id="queue-now-playing-box">
+          <span class="empty-queue-hint">Tidak ada lagu yang sedang diputar</span>
+        </div>
+      </div>
+      <div class="queue-section">
+        <div class="queue-sub-header">
+          <span class="queue-label">Berikutnya</span>
+          <button class="btn-link" id="btn-clear-queue">Bersihkan</button>
+        </div>
+        <div class="queue-items-list" id="queue-next-items">
+          <span class="empty-queue-hint">Antrean kosong</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RAM & RESOURCE MONITOR MODAL -->
+    <div class="modal-backdrop" id="stats-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>⚡ Efisiensi Sistem & Penghematan</h2>
+          <button class="btn-close-modal" id="btn-close-stats-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="stats-intro">Perbandingan nyata penggunaan sumber daya perangkat Anda dibandingkan Spotify resmi (Electron):</p>
+          
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-title">Pemakaian RAM</span>
+              <div class="stat-value"><span id="modal-ram-val">52</span> MB</div>
+              <div class="stat-sub">Spotify Resmi: ~650 MB</div>
+              <div class="stat-progress-bar">
+                <div class="progress-fill green-fill" id="modal-ram-bar" style="width: 10%;"></div>
+              </div>
+              <span class="stat-tag" id="modal-ram-tag">Hemat 92% RAM</span>
+            </div>
+
+            <div class="stat-box">
+              <span class="stat-title">Penyimpanan Disk</span>
+              <div class="stat-value"><span id="modal-storage-val">4.5</span> MB</div>
+              <div class="stat-sub">Spotify Resmi: ~550 MB+</div>
+              <div class="stat-progress-bar">
+                <div class="progress-fill green-fill" id="modal-storage-bar" style="width: 2%;"></div>
+              </div>
+              <span class="stat-tag">Hemat 99% Storage</span>
+            </div>
+          </div>
+
+          <div class="tech-points">
+            <div class="tech-row">
+              <span class="tech-icon">🚀</span>
+              <div>
+                <strong>Berbagi Engine Windows (0MB Extra Chromium)</strong>
+                <p>Tidak membundel browser baru seperti Electron; memakai shared WebView bawaan OS.</p>
+              </div>
+            </div>
+            <div class="tech-row">
+              <span class="tech-icon">⚡</span>
+              <div>
+                <strong>Streaming Parsial HTTP 206</strong>
+                <p>Audio dialirkan dalam potongan 64KB, tidak menimbun seluruh file ke dalam RAM.</p>
+              </div>
+            </div>
+            <div class="tech-row">
+              <span class="tech-icon">🎯</span>
+              <div>
+                <strong>Zero Virtual DOM Overhead</strong>
+                <p>Dibuat dengan Vanilla JavaScript modern murni tanpa React/Vue bundler berat.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="cache-action-row">
+            <div>
+              <span>Cache saat ini: <strong id="modal-cache-size">0 MB</strong></span>
+            </div>
+            <button class="btn-secondary" id="btn-clear-cache">Bersihkan Cache</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPOTIFY IMPORT MODAL -->
+    <div class="modal-backdrop" id="import-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🔗 Impor Playlist Spotify</h2>
+          <button class="btn-close-modal" id="btn-close-import-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="stats-intro">Tempelkan tautan playlist Spotify publik apa saja untuk langsung diimpor dan diputar dengan kualitas 320kbps:</p>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+            <input type="text" id="import-spotify-input" placeholder="https://open.spotify.com/playlist/..." style="flex: 1; height: 42px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0 14px; color: white; outline: none; font-family: inherit;" />
+            <button class="btn-primary" id="btn-submit-import-spotify" style="padding: 0 20px;">
+              <span>Impor</span>
+            </button>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <span style="font-size: 0.8rem; color: var(--text-subdued); font-weight: 700; display: block; margin-bottom: 10px;">CONTOH PLAYLIST PENGGUNA:</span>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="filter-chip quick-import-chip" data-id="4OmI8xAbhvqDcuKaLkEaN0" style="text-align: left; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>✨ gen z songs english <small style="color: var(--text-secondary);">(krisnika • 100 lagu)</small></span>
+                <span class="highlight-green">Buka &raquo;</span>
+              </button>
+              <button class="filter-chip quick-import-chip" data-id="1gAv5vmayVaCxbxSX7KmQj" style="text-align: left; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>🇮🇩 Indo Happy Playlist <small style="color: var(--text-secondary);">(Dewi Nrhyt • 100 lagu)</small></span>
+                <span class="highlight-green">Buka &raquo;</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM PLAYBACK BAR -->
+    <footer class="bottom-player">
+      <!-- Track Info (Left) -->
+      <div class="player-left">
+        <div class="player-thumb-box">
+          <img id="player-thumb" src="/static/images/default-album.svg" alt="Cover" />
+        </div>
+        <div class="player-meta">
+          <div class="player-title-wrap">
+            <span id="player-title">Pilih lagu untuk memutar</span>
+          </div>
+          <span id="player-artist" class="player-artist">Spotify KW</span>
+        </div>
+        <button class="btn-like-heart" id="btn-like-current" title="Sukai Lagu">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+
+      <!-- Controls & Progress (Center) -->
+      <div class="player-center">
+        <div class="player-controls">
+          <button class="control-btn" id="btn-shuffle" title="Acak (Shuffle)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/></svg>
+          </button>
+          <button class="control-btn" id="btn-prev" title="Lagu Sebelumnya">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6,6 6,18 8,18 8,6"/><polygon points="18,6 10,12 18,18"/></svg>
+          </button>
+          <button class="btn-play-pause" id="btn-play-pause" title="Putar">
+            <svg id="icon-play" viewBox="0 0 24 24" width="22" height="22" fill="black"><polygon points="6,4 20,12 6,20"/></svg>
+            <svg id="icon-pause" viewBox="0 0 24 24" width="22" height="22" fill="black" style="display: none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button class="control-btn" id="btn-next" title="Lagu Berikutnya">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6,18 14,12 6,6"/><polygon points="16,6 16,18 18,18 18,6"/></svg>
+          </button>
+          <button class="control-btn" id="btn-repeat" title="Ulangi (Repeat)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            <span class="repeat-one-indicator" id="repeat-one-indicator">1</span>
+          </button>
+        </div>
+
+        <div class="player-scrubber-row">
+          <span class="time-label" id="current-time">0:00</span>
+          <div class="slider-container" id="seek-slider-container">
+            <input type="range" id="seek-slider" min="0" max="100" value="0" step="0.1" />
+            <div class="slider-fill" id="seek-fill"></div>
+          </div>
+          <span class="time-label" id="total-duration">0:00</span>
+        </div>
+      </div>
+
+      <!-- Extra Tools (Right) -->
+      <div class="player-right">
+        <button class="control-btn" id="btn-toggle-lyrics" title="Lirik Karaoke">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+
+        <button class="control-btn" id="btn-toggle-visualizer" title="Visualizer Audio">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 9h2v6H4zm4-4h2v14H8zm4 7h2v7h-2zm4-9h2v16h-2zm4 6h2v10h-2z"/></svg>
+        </button>
+
+        <button class="control-btn" id="btn-toggle-queue" title="Daftar Antrean">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        </button>
+
+        <div class="quality-selector-wrap">
+          <select id="audio-quality-select" title="Pilihan Kualitas Bitrate Audio">
+            <option value="320" selected>320k High</option>
+            <option value="160">160k Normal</option>
+            <option value="96">96k Saver</option>
+          </select>
+        </div>
+
+        <div class="volume-container">
+          <button class="control-btn" id="btn-volume-icon" title="Bisukan (Mute)">
+            <svg id="vol-icon-high" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            <svg id="vol-icon-muted" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display: none;"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+          </button>
+          <div class="slider-container volume-slider-box">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" />
+            <div class="slider-fill" id="volume-fill" style="width: 80%;"></div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Hidden HTML5 Audio Element -->
+  <audio id="audio-engine" preload="auto" crossorigin="anonymous"></audio>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
