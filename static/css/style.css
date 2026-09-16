@@ -272,6 +272,136 @@ body {
   font-weight: 600;
 }
 
+.user-pl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.user-pl-item .pl-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-pl-item .btn-del-pl {
+  background: transparent;
+  border: none;
+  color: var(--text-subdued);
+  cursor: pointer;
+  opacity: 0;
+  font-size: 1.1rem;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.user-pl-item:hover .btn-del-pl {
+  opacity: 0.8;
+}
+
+.user-pl-item .btn-del-pl:hover {
+  opacity: 1;
+  color: #ff5555;
+  background: rgba(255, 85, 85, 0.15);
+}
+
+.downloaded-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-action-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-pill:hover {
+  border-color: var(--spotify-green);
+  color: var(--spotify-green);
+  background: rgba(30, 215, 96, 0.08);
+}
+
+.btn-action-pill.downloaded-active {
+  border-color: var(--spotify-green);
+  background: rgba(30, 215, 96, 0.15);
+  color: var(--spotify-green);
+}
+
+.btn-add-to-pl, .btn-download-track {
+  background: transparent;
+  border: none;
+  color: var(--text-subdued);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-add-to-pl:hover {
+  color: var(--text-primary);
+  transform: scale(1.15);
+}
+
+.btn-download-track:hover {
+  color: var(--spotify-green);
+  transform: scale(1.15);
+}
+
+.btn-download-track.downloaded {
+  color: var(--spotify-green);
+}
+
+.btn-download-track.downloading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.add-to-pl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.add-to-pl-item:hover {
+  border-color: var(--spotify-green);
+  background: rgba(30, 215, 96, 0.08);
+}
+
 .sidebar-footer {
   padding-top: 12px;
 }

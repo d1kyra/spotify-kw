@@ -42,6 +42,20 @@ BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 CACHE_DIR = BASE_DIR / "cache"
 CACHE_DIR.mkdir(exist_ok=True)
+DOWNLOADS_DIR = CACHE_DIR / "downloads"
+DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+DOWNLOADS_META_FILE = CACHE_DIR / "downloads.json"
+
+# In-memory download worker queue & state
+_DOWNLOAD_QUEUE: List[Dict[str, Any]] = []
+_DOWNLOAD_STATE = {
+    "is_downloading": False,
+    "current_track": None,
+    "completed": 0,
+    "total": 0,
+    "failed": 0
+}
+_DOWNLOAD_LOCK = threading.Lock()
 
 # In-memory search cache (bounded to 50 items for minimal RAM footprint)
 _SEARCH_CACHE: Dict[str, Any] = {}
@@ -618,13 +632,143 @@ async def api_featured():
     return sections
 
 
+def get_safe_filename(track_id: str) -> str:
+    return re.sub(r'[^a-zA-Z0-9_-]', '_', str(track_id))
+
+
+def load_downloads_meta() -> Dict[str, Any]:
+    if DOWNLOADS_META_FILE.exists():
+        try:
+            with open(DOWNLOADS_META_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_downloads_meta(data: Dict[str, Any]):
+    try:
+        with open(DOWNLOADS_META_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[Save downloads.json error] {e}")
+
+
+def download_single_track(track: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    track_id = track.get("id")
+    if not track_id:
+        return None
+
+    safe_name = get_safe_filename(track_id)
+    file_path = DOWNLOADS_DIR / f"{safe_name}.m4a"
+
+    # If already downloaded and valid size (>50KB), return existing
+    if file_path.exists() and file_path.stat().st_size > 50000:
+        meta = load_downloads_meta()
+        if track_id in meta:
+            return meta[track_id]
+
+    stream_url = track.get("stream_url") or track.get("stream_320")
+    if not stream_url:
+        # Resolve Spotify stream
+        resolved = resolve_spotify_track(track.get("title", ""), track.get("artist", ""), track.get("preview_url"))
+        if resolved and resolved.get("stream_url"):
+            stream_url = resolved["stream_url"]
+            if resolved.get("image") and not track.get("image"):
+                track["image"] = resolved["image"]
+
+    if not stream_url:
+        return None
+
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        resp = requests.get(stream_url, headers=headers, stream=True, timeout=25)
+        if resp.status_code not in (200, 206):
+            return None
+
+        temp_path = DOWNLOADS_DIR / f"{safe_name}.tmp"
+        size = 0
+        with open(temp_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=65536):
+                if chunk:
+                    f.write(chunk)
+                    size += len(chunk)
+
+        if size < 50000:
+            if temp_path.exists():
+                temp_path.unlink()
+            return None
+
+        if file_path.exists():
+            file_path.unlink()
+        temp_path.rename(file_path)
+
+        track_meta = {
+            "id": track_id,
+            "title": track.get("title") or "Unknown Title",
+            "artist": track.get("artist") or "Unknown Artist",
+            "album": track.get("album") or "Offline Download",
+            "duration": track.get("duration") or 0,
+            "duration_str": track.get("duration_str") or format_duration(track.get("duration", 0)),
+            "image": track.get("image") or "/static/images/default-album.svg",
+            "local_file": str(file_path),
+            "file_size": size,
+            "downloaded_at": int(time.time()),
+            "source": "offline",
+            "stream_url": f"/api/offline/stream/{safe_name}",
+        }
+
+        all_meta = load_downloads_meta()
+        all_meta[track_id] = track_meta
+        save_downloads_meta(all_meta)
+        return track_meta
+    except Exception as e:
+        print(f"[Download Track Error] {e}")
+        return None
+
+
+def _download_worker():
+    global _DOWNLOAD_STATE, _DOWNLOAD_QUEUE
+    while True:
+        track = None
+        with _DOWNLOAD_LOCK:
+            if not _DOWNLOAD_QUEUE:
+                _DOWNLOAD_STATE["is_downloading"] = False
+                _DOWNLOAD_STATE["current_track"] = None
+                break
+            track = _DOWNLOAD_QUEUE.pop(0)
+            _DOWNLOAD_STATE["is_downloading"] = True
+            _DOWNLOAD_STATE["current_track"] = track.get("title", "")
+
+        res = download_single_track(track)
+        with _DOWNLOAD_LOCK:
+            if res:
+                _DOWNLOAD_STATE["completed"] += 1
+            else:
+                _DOWNLOAD_STATE["failed"] += 1
+        time.sleep(0.15)
+
+
 @app.get("/api/stream")
-async def api_stream(request: Request, url: str = Query(...)):
+async def api_stream(request: Request, url: str = Query(...), track_id: Optional[str] = Query(None)):
     """
     Streaming proxy with full HTTP 206 Partial Content support.
     Enables instant seek scrubbing and minimal RAM allocation (64KB chunks).
+    If track is downloaded offline, serves directly from disk with 0 internet.
     """
+    if track_id:
+        safe_name = get_safe_filename(track_id)
+        local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+        if local_file.exists() and local_file.stat().st_size > 50000:
+            return FileResponse(local_file, media_type="audio/mp4")
+
     if not url or not url.startswith("http"):
+        # Check if url might be an offline stream endpoint
+        if url and "/api/offline/stream/" in url:
+            safe_name = url.split("/")[-1]
+            local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+            if local_file.exists() and local_file.stat().st_size > 50000:
+                return FileResponse(local_file, media_type="audio/mp4")
         raise HTTPException(status_code=400, detail="Invalid stream URL")
 
     # Range header from client (browser <audio>)
@@ -664,6 +808,110 @@ async def api_stream(request: Request, url: str = Query(...)):
         )
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Streaming error: {str(e)}")
+
+
+@app.get("/api/offline/list")
+async def api_offline_list():
+    """Return all locally downloaded tracks."""
+    meta = load_downloads_meta()
+    valid_tracks = []
+    updated = False
+    for tid, t in list(meta.items()):
+        safe_name = get_safe_filename(tid)
+        local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+        if local_file.exists() and local_file.stat().st_size > 50000:
+            t["stream_url"] = f"/api/offline/stream/{safe_name}"
+            valid_tracks.append(t)
+        else:
+            del meta[tid]
+            updated = True
+    if updated:
+        save_downloads_meta(meta)
+    return valid_tracks
+
+
+@app.post("/api/offline/download")
+async def api_offline_download(request: Request):
+    """Download a single track for offline playback."""
+    track = await request.json()
+    if not track or not track.get("id"):
+        raise HTTPException(status_code=400, detail="Invalid track data")
+    
+    res = download_single_track(track)
+    if res:
+        return {"status": "success", "track": res}
+    return {"status": "error", "message": "Gagal mengunduh lagu"}
+
+
+@app.post("/api/offline/download-playlist")
+async def api_offline_download_playlist(request: Request):
+    """Queue entire playlist for background sequential download."""
+    data = await request.json()
+    tracks = data.get("tracks", [])
+    if not tracks:
+        return {"status": "empty", "queued": 0}
+
+    all_meta = load_downloads_meta()
+    to_queue = []
+    for t in tracks:
+        tid = t.get("id")
+        if not tid:
+            continue
+        safe_name = get_safe_filename(tid)
+        local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+        if not (local_file.exists() and local_file.stat().st_size > 50000 and tid in all_meta):
+            to_queue.append(t)
+
+    with _DOWNLOAD_LOCK:
+        _DOWNLOAD_QUEUE.extend(to_queue)
+        _DOWNLOAD_STATE["total"] += len(to_queue)
+        if not _DOWNLOAD_STATE["is_downloading"]:
+            _DOWNLOAD_STATE["is_downloading"] = True
+            threading.Thread(target=_download_worker, daemon=True).start()
+
+    return {"status": "queued", "queued_count": len(to_queue), "total_queue": len(_DOWNLOAD_QUEUE)}
+
+
+@app.get("/api/offline/progress")
+async def api_offline_progress():
+    """Return background download progress."""
+    with _DOWNLOAD_LOCK:
+        return {
+            "is_downloading": _DOWNLOAD_STATE["is_downloading"],
+            "current_track": _DOWNLOAD_STATE["current_track"],
+            "completed": _DOWNLOAD_STATE["completed"],
+            "total": _DOWNLOAD_STATE["total"],
+            "failed": _DOWNLOAD_STATE["failed"],
+            "remaining": len(_DOWNLOAD_QUEUE),
+        }
+
+
+@app.delete("/api/offline/delete")
+async def api_offline_delete(track_id: str = Query(...)):
+    """Delete a downloaded track from disk and metadata."""
+    safe_name = get_safe_filename(track_id)
+    local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+    if local_file.exists():
+        try:
+            local_file.unlink()
+        except Exception:
+            pass
+
+    all_meta = load_downloads_meta()
+    if track_id in all_meta:
+        del all_meta[track_id]
+        save_downloads_meta(all_meta)
+
+    return {"status": "deleted", "id": track_id}
+
+
+@app.get("/api/offline/stream/{safe_name}")
+async def api_offline_stream(safe_name: str):
+    """Serve downloaded track directly from local disk."""
+    local_file = DOWNLOADS_DIR / f"{safe_name}.m4a"
+    if local_file.exists():
+        return FileResponse(local_file, media_type="audio/mp4")
+    raise HTTPException(status_code=404, detail="File offline tidak ditemukan")
 
 
 @app.get("/api/lyrics")

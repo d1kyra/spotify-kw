@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
     analyser: null,
     visualizerAnimationId: null,
     currentPlaylistTracks: [],
+    downloadedTracks: [],
   };
+
+  let trackToAddToPlaylist = null;
+  let downloadPollInterval = null;
 
   // ==========================================
   // DOM ELEMENTS CACHE
@@ -132,6 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
     volumeFill.style.width = `${state.volume * 100}%`;
     audioQualitySelect.value = state.audioQuality;
     updateLikedBadge();
+    renderUserPlaylists();
+    loadDownloadedTracks();
 
     // Set greeting based on time of day
     setGreeting();
@@ -259,6 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
     state.syncedLyrics = [];
     state.activeLyricIndex = -1;
     if (lyricsContainer) lyricsContainer.innerHTML = '';
+
+    // Check if track is downloaded offline for instant 0-internet playback
+    if (isTrackDownloaded(track.id) || track.source === 'offline') {
+      const safeName = getSafeFilename(track.id);
+      track.stream_url = `/api/offline/stream/${safeName}`;
+      track.source = 'offline';
+    }
 
     // Check if track is from Spotify or Curated and streamUrl needs resolving
     if ((track.source === 'spotify' || track.source === 'curated') && !track.stream_url) {
@@ -631,6 +644,11 @@ document.addEventListener('DOMContentLoaded', () => {
     navLiked.addEventListener('click', () => openLikedSongsView());
     navLocal.addEventListener('click', () => switchView('local'));
 
+    const navDownloaded = document.getElementById('nav-downloaded');
+    if (navDownloaded) {
+      navDownloaded.addEventListener('click', () => openDownloadedSongsView());
+    }
+
     // Sidebar Curated Playlists clicks
     document.querySelectorAll('.playlist-item[data-id]').forEach(item => {
       item.addEventListener('click', () => {
@@ -690,17 +708,45 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Create playlist button
+    // Create playlist button (+) in sidebar
     document.getElementById('btn-create-playlist').addEventListener('click', () => {
       const name = prompt('Nama playlist baru:');
       if (name && name.trim()) {
         const newPl = { id: `user_pl_${Date.now()}`, name: name.trim(), tracks: [] };
-        state.userPlaylists.push(newPl);
+        state.userPlaylists.unshift(newPl);
         localStorage.setItem('spkw_playlists', JSON.stringify(state.userPlaylists));
         renderUserPlaylists();
-        alert(`Playlist "${name}" berhasil dibuat!`);
+        openUserPlaylist(newPl.id);
       }
     });
+
+    // Modal Add To Playlist Handlers
+    const addToPlModal = document.getElementById('add-to-playlist-modal');
+    const btnCloseAddToPl = document.getElementById('btn-close-add-to-pl');
+    const btnCreatePlFromModal = document.getElementById('btn-create-pl-from-modal');
+
+    if (btnCloseAddToPl) {
+      btnCloseAddToPl.addEventListener('click', () => {
+        addToPlModal.style.display = 'none';
+      });
+    }
+
+    if (btnCreatePlFromModal) {
+      btnCreatePlFromModal.addEventListener('click', () => {
+        const name = prompt('Nama playlist baru:');
+        if (name && name.trim()) {
+          const newPl = { id: `user_pl_${Date.now()}`, name: name.trim(), tracks: [] };
+          if (trackToAddToPlaylist) {
+            newPl.tracks.push(trackToAddToPlaylist);
+          }
+          state.userPlaylists.unshift(newPl);
+          localStorage.setItem('spkw_playlists', JSON.stringify(state.userPlaylists));
+          renderUserPlaylists();
+          addToPlModal.style.display = 'none';
+          openUserPlaylist(newPl.id);
+        }
+      });
+    }
 
     // Playlist banner Play All button
     document.getElementById('btn-playlist-play-all').addEventListener('click', () => {
@@ -718,6 +764,12 @@ document.addEventListener('DOMContentLoaded', () => {
         playTrack(shuffled[0], shuffled.slice(1));
       }
     });
+
+    // Playlist banner Download All button
+    const btnDownloadAll = document.getElementById('btn-playlist-download-all');
+    if (btnDownloadAll) {
+      btnDownloadAll.addEventListener('click', handleDownloadPlaylist);
+    }
   }
 
   function switchView(viewName) {
@@ -733,6 +785,11 @@ document.addEventListener('DOMContentLoaded', () => {
     navSearch.classList.toggle('active', viewName === 'search');
     navLiked.classList.toggle('active', viewName === 'playlist' && state.activePlaylistId === 'liked');
     navLocal.classList.toggle('active', viewName === 'local');
+
+    const navDownloaded = document.getElementById('nav-downloaded');
+    if (navDownloaded) {
+      navDownloaded.classList.toggle('active', viewName === 'playlist' && state.activePlaylistId === 'downloaded');
+    }
 
     // Scroll to top
     document.getElementById('main-content-scroll').scrollTop = 0;
@@ -998,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const isLiked = isTrackLiked(track.id);
+    const isDl = isTrackDownloaded(track.id);
 
     row.innerHTML = `
       <div class="track-num-col">
@@ -1005,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <svg class="row-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
       </div>
       <div class="track-title-col">
-        <img class="track-thumb-mini" src="${track.image}" onerror="this.src='/static/images/default-album.svg'" loading="lazy" />
+        <img class="track-thumb-mini" src="${track.image || '/static/images/default-album.svg'}" onerror="this.src='/static/images/default-album.svg'" loading="lazy" />
         <div class="track-title-text-wrap">
           <span class="track-name">${escapeHtml(track.title)}</span>
           <span class="track-artist-sub">${escapeHtml(track.artist)}</span>
@@ -1013,6 +1071,15 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="track-album-col">${escapeHtml(track.album || 'Single')}</div>
       <div class="track-dur-col">
+        <button class="btn-add-to-pl" title="Tambah ke Playlist" data-id="${track.id}">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="btn-download-track ${isDl ? 'downloaded' : ''}" title="${isDl ? 'Tersimpan Offline' : 'Download Lagu'}" data-id="${track.id}">
+          ${isDl 
+            ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1ed760" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+            : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'
+          }
+        </button>
         <button class="row-like-btn ${isLiked ? 'liked' : ''}" title="Sukai">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="${isLiked ? '#1ed760' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         </button>
@@ -1021,7 +1088,19 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     row.addEventListener('click', (e) => {
-      // Don't trigger play if clicked on like button
+      if (e.target.closest('.btn-add-to-pl')) {
+        e.stopPropagation();
+        openAddToPlaylistModal(track);
+        return;
+      }
+
+      if (e.target.closest('.btn-download-track')) {
+        e.stopPropagation();
+        const dlBtn = row.querySelector('.btn-download-track');
+        handleDownloadSingleTrack(track, dlBtn);
+        return;
+      }
+
       if (e.target.closest('.row-like-btn')) {
         e.stopPropagation();
         toggleLikeTrack(track);
@@ -1050,8 +1129,316 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // PLAYLISTS & LIKED SONGS
+  // PLAYLISTS & OFFLINE DOWNLOAD ENGINE
   // ==========================================
+  function renderUserPlaylists() {
+    const container = document.getElementById('user-playlist-items');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!state.userPlaylists || state.userPlaylists.length === 0) {
+      container.innerHTML = '<div style="padding: 6px 10px; font-size: 0.78rem; color: var(--text-subdued); font-style: italic;">Belum ada playlist</div>';
+      return;
+    }
+
+    state.userPlaylists.forEach(pl => {
+      const item = document.createElement('div');
+      item.className = 'playlist-item user-pl-item';
+      if (state.activePlaylistId === pl.id) {
+        item.classList.add('active-playlist');
+      }
+      item.dataset.id = pl.id;
+      item.innerHTML = `
+        <span class="pl-name" title="${escapeHtml(pl.name)}">${escapeHtml(pl.name)}</span>
+        <button class="btn-del-pl" title="Hapus Playlist" data-id="${pl.id}">&times;</button>
+      `;
+
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-del-pl')) {
+          e.stopPropagation();
+          deleteUserPlaylist(pl.id, e);
+          return;
+        }
+        openUserPlaylist(pl.id);
+      });
+
+      container.appendChild(item);
+    });
+  }
+
+  function openUserPlaylist(playlistId) {
+    const pl = state.userPlaylists.find(p => p.id === playlistId);
+    if (!pl) return;
+
+    state.activePlaylistId = playlistId;
+    state.currentPlaylistTracks = pl.tracks || [];
+
+    document.getElementById('playlist-hero-title').textContent = pl.name;
+    document.getElementById('playlist-hero-desc').textContent = 'Playlist Pribadi Anda';
+    document.getElementById('playlist-cover-img').src = pl.cover || '/static/images/default-album.svg';
+    document.getElementById('playlist-cover-img').style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+    document.getElementById('playlist-meta-type').textContent = 'PLAYLIST SAYA';
+    document.getElementById('playlist-track-count').textContent = `${state.currentPlaylistTracks.length} lagu`;
+
+    const btnSaveLib = document.getElementById('btn-playlist-save-library');
+    if (btnSaveLib) btnSaveLib.style.display = 'none';
+
+    const btnDlAll = document.getElementById('btn-playlist-download-all');
+    if (btnDlAll) {
+      btnDlAll.style.display = 'inline-flex';
+      const allDownloaded = state.currentPlaylistTracks.length > 0 && state.currentPlaylistTracks.every(t => isTrackDownloaded(t.id));
+      const dlText = document.getElementById('btn-download-all-text');
+      if (dlText) {
+        dlText.textContent = allDownloaded ? 'Semua Diunduh ✓' : 'Download Playlist';
+      }
+    }
+
+    renderPlaylistTable(state.currentPlaylistTracks);
+    switchView('playlist');
+    highlightActivePlaylistItem();
+  }
+
+  function deleteUserPlaylist(playlistId, e) {
+    if (e) e.stopPropagation();
+    const pl = state.userPlaylists.find(p => p.id === playlistId);
+    const name = pl ? pl.name : 'Playlist';
+    if (confirm(`Apakah Anda yakin ingin menghapus playlist "${name}"?`)) {
+      state.userPlaylists = state.userPlaylists.filter(p => p.id !== playlistId);
+      localStorage.setItem('spkw_playlists', JSON.stringify(state.userPlaylists));
+      renderUserPlaylists();
+      showToast(`Playlist "${name}" berhasil dihapus`, 'info');
+      if (state.activePlaylistId === playlistId) {
+        switchView('home');
+      }
+    }
+  }
+
+  function openAddToPlaylistModal(track) {
+    trackToAddToPlaylist = track;
+    const modal = document.getElementById('add-to-playlist-modal');
+    const titleEl = document.getElementById('add-to-pl-track-title');
+    const listEl = document.getElementById('add-to-pl-list');
+    if (!modal || !listEl) return;
+
+    if (titleEl) {
+      titleEl.textContent = `Lagu: ${track.title} - ${track.artist}`;
+    }
+
+    listEl.innerHTML = '';
+    if (!state.userPlaylists || state.userPlaylists.length === 0) {
+      listEl.innerHTML = '<div style="color: var(--text-subdued); font-size: 0.85rem; padding: 12px 0;">Anda belum memiliki playlist. Buat playlist baru di bawah.</div>';
+    } else {
+      state.userPlaylists.forEach(pl => {
+        const alreadyHas = pl.tracks && pl.tracks.some(t => t.id === track.id);
+        const row = document.createElement('div');
+        row.className = 'add-to-pl-item';
+        row.innerHTML = `
+          <span>${escapeHtml(pl.name)} (${pl.tracks ? pl.tracks.length : 0} lagu)</span>
+          <span style="font-size: 0.78rem; color: ${alreadyHas ? 'var(--spotify-green)' : 'var(--text-subdued)'};">
+            ${alreadyHas ? '✓ Tersedia' : '+ Tambahkan'}
+          </span>
+        `;
+        row.addEventListener('click', () => {
+          if (!pl.tracks) pl.tracks = [];
+          if (alreadyHas) {
+            showToast(`Lagu sudah ada di "${pl.name}"`, 'info');
+          } else {
+            pl.tracks.push(track);
+            localStorage.setItem('spkw_playlists', JSON.stringify(state.userPlaylists));
+            renderUserPlaylists();
+            showToast(`Berhasil menambahkan ke "${pl.name}"!`, 'success');
+          }
+          modal.style.display = 'none';
+        });
+        listEl.appendChild(row);
+      });
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function highlightActivePlaylistItem() {
+    document.querySelectorAll('.playlist-item').forEach(el => {
+      const isAct = el.dataset.id === state.activePlaylistId || 
+                    (state.activePlaylistId && state.activePlaylistId.startsWith('spotify_') && el.dataset.spotify && state.activePlaylistId.includes(el.dataset.spotify));
+      el.classList.toggle('active-playlist', !!isAct);
+    });
+  }
+
+  async function loadDownloadedTracks() {
+    try {
+      const res = await fetch('/api/offline/list');
+      if (res.ok) {
+        const list = await res.json();
+        state.downloadedTracks = Array.isArray(list) ? list : (list.tracks || []);
+        const badge = document.getElementById('downloaded-count-badge');
+        if (badge) {
+          badge.textContent = state.downloadedTracks.length;
+        }
+      }
+    } catch (err) {
+      console.warn('Offline list check failed:', err);
+    }
+  }
+
+  function isTrackDownloaded(id) {
+    if (!id) return false;
+    return state.downloadedTracks.some(t => t.id === id);
+  }
+
+  function openDownloadedSongsView() {
+    state.activePlaylistId = 'downloaded';
+    state.currentPlaylistTracks = state.downloadedTracks;
+
+    document.getElementById('playlist-hero-title').textContent = 'Lagu Terunduh (Offline)';
+    document.getElementById('playlist-hero-desc').textContent = 'Koleksi lagu tersimpan di perangkat. Putar kapan saja 100% tanpa internet.';
+    document.getElementById('playlist-cover-img').src = '/static/images/default-album.svg';
+    document.getElementById('playlist-cover-img').style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    document.getElementById('playlist-meta-type').textContent = 'KOLEKSI OFFLINE';
+    document.getElementById('playlist-track-count').textContent = `${state.downloadedTracks.length} lagu`;
+
+    const btnSaveLib = document.getElementById('btn-playlist-save-library');
+    if (btnSaveLib) btnSaveLib.style.display = 'none';
+
+    const btnDlAll = document.getElementById('btn-playlist-download-all');
+    if (btnDlAll) {
+      btnDlAll.style.display = 'none';
+    }
+
+    renderPlaylistTable(state.downloadedTracks);
+    switchView('playlist');
+    highlightActivePlaylistItem();
+  }
+
+  async function handleDownloadSingleTrack(track, btnEl) {
+    if (isTrackDownloaded(track.id)) {
+      showToast(`"${track.title}" sudah tersimpan offline`, 'info');
+      return;
+    }
+
+    if (btnEl) {
+      btnEl.classList.add('downloading');
+      btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"/></svg>`;
+    }
+    showToast(`Mulai mengunduh: ${track.title}...`, 'info');
+
+    try {
+      const res = await fetch('/api/offline/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: track.id,
+          title: track.title,
+          artist: track.artist || 'Unknown',
+          album: track.album || '',
+          duration: track.duration || 0,
+          image: track.image || ''
+        })
+      });
+      const result = await res.json();
+      if (res.ok && result.status === 'success') {
+        await loadDownloadedTracks();
+        if (btnEl) {
+          btnEl.classList.remove('downloading');
+          btnEl.classList.add('downloaded');
+          btnEl.title = 'Tersimpan Offline';
+          btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1ed760" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+        }
+        showToast(`Lagu "${track.title}" berhasil diunduh ke offline!`, 'success');
+      } else {
+        throw new Error(result.message || 'Download failed');
+      }
+    } catch (err) {
+      console.error('Download single track failed:', err);
+      if (btnEl) {
+        btnEl.classList.remove('downloading');
+        btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`;
+      }
+      showToast(`Gagal mengunduh "${track.title}".`, 'error');
+    }
+  }
+
+  async function handleDownloadPlaylist() {
+    const tracks = state.currentPlaylistTracks || [];
+    if (tracks.length === 0) {
+      showToast('Tidak ada lagu untuk diunduh dalam playlist ini.', 'info');
+      return;
+    }
+
+    const dlText = document.getElementById('btn-download-all-text');
+    const pending = tracks.filter(t => !isTrackDownloaded(t.id));
+    if (pending.length === 0) {
+      showToast('Semua lagu di playlist ini sudah terunduh offline!', 'info');
+      if (dlText) dlText.textContent = 'Semua Diunduh ✓';
+      return;
+    }
+
+    if (dlText) dlText.textContent = `Mengantre (${pending.length} lagu)...`;
+    showToast(`Mengunduh ${pending.length} lagu di background...`, 'info');
+
+    try {
+      const res = await fetch('/api/offline/download-playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playlist_title: document.getElementById('playlist-hero-title')?.textContent || 'Playlist',
+          tracks: tracks.map(t => ({
+            id: t.id,
+            title: t.title,
+            artist: t.artist || '',
+            album: t.album || '',
+            duration: t.duration || 0,
+            image: t.image || ''
+          }))
+        })
+      });
+
+      if (res.ok) {
+        pollDownloadProgress();
+      } else {
+        showToast('Gagal memulai unduhan playlist.', 'error');
+        if (dlText) dlText.textContent = 'Download Playlist';
+      }
+    } catch (err) {
+      console.error('Download playlist error:', err);
+      showToast('Koneksi terputus saat memulai unduhan.', 'error');
+      if (dlText) dlText.textContent = 'Download Playlist';
+    }
+  }
+
+  function pollDownloadProgress() {
+    if (downloadPollInterval) clearInterval(downloadPollInterval);
+    const dlText = document.getElementById('btn-download-all-text');
+
+    downloadPollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/offline/progress');
+        if (res.ok) {
+          const p = await res.json();
+          if (p.is_downloading) {
+            if (dlText) {
+              dlText.textContent = `Mengunduh (${p.completed}/${p.total})...`;
+            }
+          } else {
+            clearInterval(downloadPollInterval);
+            downloadPollInterval = null;
+            await loadDownloadedTracks();
+            if (dlText) {
+              dlText.textContent = 'Semua Diunduh ✓';
+            }
+            showToast('Selesai! Seluruh lagu playlist kini tersimpan offline.', 'success');
+            if (state.activeView === 'playlist') {
+              renderPlaylistTable(state.currentPlaylistTracks);
+            }
+          }
+        }
+      } catch (e) {
+        clearInterval(downloadPollInterval);
+        downloadPollInterval = null;
+      }
+    }, 1200);
+  }
+
   function openLikedSongsView() {
     state.activePlaylistId = 'liked';
     state.currentPlaylistTracks = state.likedSongs;
@@ -1063,8 +1450,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('playlist-meta-type').textContent = 'KOLEKSI PRIBADI';
     document.getElementById('playlist-track-count').textContent = `${state.likedSongs.length} lagu`;
 
+    const btnSaveLib = document.getElementById('btn-playlist-save-library');
+    if (btnSaveLib) btnSaveLib.style.display = 'none';
+
+    const btnDlAll = document.getElementById('btn-playlist-download-all');
+    if (btnDlAll) {
+      btnDlAll.style.display = 'inline-flex';
+      const allDownloaded = state.likedSongs.length > 0 && state.likedSongs.every(t => isTrackDownloaded(t.id));
+      const dlText = document.getElementById('btn-download-all-text');
+      if (dlText) {
+        dlText.textContent = allDownloaded ? 'Semua Diunduh ✓' : 'Download Playlist';
+      }
+    }
+
     renderPlaylistTable(state.likedSongs);
     switchView('playlist');
+    highlightActivePlaylistItem();
   }
 
   function openCuratedPlaylist(playlistId, title) {
@@ -1073,6 +1474,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('playlist-hero-desc').textContent = 'Koleksi pilihan Spotify KW (100% Kualitas 320kbps)';
     document.getElementById('playlist-meta-type').textContent = 'PLAYLIST TERKURASI';
     document.getElementById('playlist-cover-img').src = '/static/images/default-album.svg';
+
+    const btnSaveLib = document.getElementById('btn-playlist-save-library');
+    if (btnSaveLib) btnSaveLib.style.display = 'none';
+
+    const btnDlAll = document.getElementById('btn-playlist-download-all');
+    if (btnDlAll) {
+      btnDlAll.style.display = 'inline-flex';
+      const dlText = document.getElementById('btn-download-all-text');
+      if (dlText) dlText.textContent = 'Download Playlist';
+    }
+
     document.getElementById('playlist-tracklist-items').innerHTML = `
       <div class="loading-spinner-box">
         <div class="spinner"></div>
@@ -1080,6 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     switchView('playlist');
+    highlightActivePlaylistItem();
 
     fetch(`/api/playlist/curated?id=${encodeURIComponent(playlistId)}`)
       .then(r => r.json())
@@ -1091,6 +1504,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pl.cover) {
           document.getElementById('playlist-cover-img').src = pl.cover;
         }
+
+        if (btnDlAll) {
+          const allDownloaded = state.currentPlaylistTracks.length > 0 && state.currentPlaylistTracks.every(t => isTrackDownloaded(t.id));
+          const dlText = document.getElementById('btn-download-all-text');
+          if (dlText) dlText.textContent = allDownloaded ? 'Semua Diunduh ✓' : 'Download Playlist';
+        }
+
         renderPlaylistTable(state.currentPlaylistTracks);
       })
       .catch(e => {
@@ -1117,6 +1537,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     switchView('playlist');
+    highlightActivePlaylistItem();
 
     try {
       const resp = await fetch(`/api/spotify/playlist?url=${encodeURIComponent(playlistIdOrUrl)}`);
@@ -1128,6 +1549,39 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('playlist-track-count').textContent = `${pl.track_count || pl.tracks.length} lagu`;
 
       state.currentPlaylistTracks = pl.tracks || [];
+
+      // Show Save to Library button
+      const btnSaveLib = document.getElementById('btn-playlist-save-library');
+      if (btnSaveLib) {
+        btnSaveLib.style.display = 'inline-flex';
+        btnSaveLib.onclick = () => {
+          const existing = state.userPlaylists.find(p => p.id === state.activePlaylistId || p.name === (pl.title || 'Playlist'));
+          if (existing) {
+            showToast('Playlist ini sudah ada di Library Anda!', 'info');
+            return;
+          }
+          const newPl = {
+            id: `saved_${Date.now()}`,
+            name: pl.title || 'Playlist Spotify',
+            cover: pl.cover || '/static/images/default-album.svg',
+            tracks: [...state.currentPlaylistTracks]
+          };
+          state.userPlaylists.unshift(newPl);
+          localStorage.setItem('spkw_playlists', JSON.stringify(state.userPlaylists));
+          renderUserPlaylists();
+          showToast(`Playlist "${newPl.name}" berhasil disimpan ke Library!`, 'success');
+        };
+      }
+
+      // Show Download All button
+      const btnDlAll = document.getElementById('btn-playlist-download-all');
+      if (btnDlAll) {
+        btnDlAll.style.display = 'inline-flex';
+        const allDl = state.currentPlaylistTracks.length > 0 && state.currentPlaylistTracks.every(t => isTrackDownloaded(t.id));
+        const dlText = document.getElementById('btn-download-all-text');
+        if (dlText) dlText.textContent = allDl ? 'Semua Diunduh ✓' : 'Download Playlist';
+      }
+
       renderPlaylistTable(state.currentPlaylistTracks);
     } catch (e) {
       console.error('Spotify playlist fetch error:', e);
@@ -1146,7 +1600,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tracks || tracks.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 48px; color: var(--text-subdued);">
-          Belum ada lagu di sini. Silakan tambahkan lagu dengan menekan ikon hati.
+          Belum ada lagu di sini. Silakan tambahkan lagu dengan tombol + atau menekan ikon hati.
         </div>
       `;
       return;
@@ -1173,7 +1627,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLikedBadge();
     updateCurrentLikeButton();
 
-    // If currently viewing liked playlist, re-render
     if (state.activeView === 'playlist' && state.activePlaylistId === 'liked') {
       openLikedSongsView();
     }
@@ -1190,6 +1643,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const svg = btnLikeCurrent.querySelector('svg');
     svg.setAttribute('fill', liked ? '#1ed760' : 'none');
     svg.style.color = liked ? '#1ed760' : 'var(--text-subdued)';
+  }
+
+  function getSafeFilename(id) {
+    return String(id).replace(/[^a-zA-Z0-9_-]/g, '_');
+  }
+
+  function showToast(message, type = 'info') {
+    let toast = document.getElementById('spkw-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'spkw-toast';
+      toast.style.position = 'fixed';
+      toast.style.bottom = '100px';
+      toast.style.left = '50%';
+      toast.style.transform = 'translateX(-50%) translateY(20px)';
+      toast.style.background = '#282828';
+      toast.style.color = '#fff';
+      toast.style.padding = '12px 24px';
+      toast.style.borderRadius = '30px';
+      toast.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5)';
+      toast.style.fontSize = '0.9rem';
+      toast.style.fontWeight = '600';
+      toast.style.zIndex = '99999';
+      toast.style.opacity = '0';
+      toast.style.transition = 'all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)';
+      toast.style.pointerEvents = 'none';
+      toast.style.border = '1px solid rgba(255,255,255,0.1)';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.borderColor = type === 'success' ? '#1ed760' : (type === 'error' ? '#e91429' : 'rgba(255,255,255,0.15)');
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 3000);
   }
 
   // ==========================================

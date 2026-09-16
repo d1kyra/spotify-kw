@@ -59,6 +59,13 @@
             <span>Lagu Lokal (Offline)</span>
             <span class="count-badge" id="local-count-badge">0</span>
           </li>
+          <li class="nav-sub-item" id="nav-downloaded">
+            <div class="downloaded-icon-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5h2v5h3l-4 4-4-4h3zm-3-8h8v2H8V8.5z"/></svg>
+            </div>
+            <span>Lagu Terunduh (Offline)</span>
+            <span class="count-badge" id="downloaded-count-badge">0</span>
+          </li>
         </ul>
       </div>
 
@@ -70,6 +77,10 @@
           </button>
         </div>
         <div class="playlist-list" id="sidebar-playlist-container">
+          <!-- User Created & Saved Playlists -->
+          <div id="user-playlist-items"></div>
+
+          <div class="sidebar-section-divider"></div>
           <!-- User Spotify Playlists -->
           <div class="playlist-item spotify-pl-item" data-spotify="4OmI8xAbhvqDcuKaLkEaN0" title="100 lagu (NIKI, LANY, dll.)">
             ✨ gen z songs english
@@ -215,6 +226,14 @@
             </button>
             <button class="btn-icon-large" id="btn-playlist-shuffle-all" title="Acak Putar">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.42-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.12z"/></svg>
+            </button>
+            <button class="btn-action-pill" id="btn-playlist-download-all" title="Download seluruh lagu playlist untuk diputar saat offline">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span id="btn-download-all-text">Download Playlist</span>
+            </button>
+            <button class="btn-action-pill btn-save-pl-pill" id="btn-playlist-save-library" style="display: none;" title="Simpan playlist ini ke sidebar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
+              <span>+ Simpan ke Library</span>
             </button>
           </div>
 
@@ -508,6 +527,23 @@
         </div>
       </div>
     </footer>
+  </div>
+
+  <!-- ADD TO PLAYLIST MODAL -->
+  <div class="modal-overlay" id="add-to-playlist-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Tambahkan ke Playlist</h3>
+        <button class="btn-icon-tiny" id="btn-close-add-to-pl">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="add-to-pl-track-title" style="font-weight: 600; margin-bottom: 12px; color: var(--spotify-green); font-size: 0.92rem;"></p>
+        <div id="add-to-pl-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto;"></div>
+        <div style="margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+          <button class="btn-action-outline" id="btn-create-pl-from-modal" style="width: 100%; justify-content: center;">+ Buat Playlist Baru</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Hidden HTML5 Audio Element -->
