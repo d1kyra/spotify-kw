@@ -183,18 +183,55 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    audio.addEventListener('loadedmetadata', () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        totalDurationLabel.textContent = formatTime(audio.duration);
+      }
+    });
+
     audio.addEventListener('ended', () => {
       handleTrackEnded();
     });
 
     audio.addEventListener('error', (e) => {
       console.warn('Audio playback error, attempting fallback:', e);
-      // If error occurs with 320kbps, try 160kbps or next track
-      if (state.currentTrack && state.currentTrack.stream_160 && state.audioQuality === '320') {
+      if (state.currentTrack && state.currentTrack.stream_160 && state.audioQuality === '320' && audio.src.indexOf(encodeURIComponent(state.currentTrack.stream_160)) === -1) {
         audio.src = `/api/stream?url=${encodeURIComponent(state.currentTrack.stream_160)}`;
-        audio.play().catch(() => {});
+        audio.play().catch(() => playNextTrack(false));
+      } else {
+        setTimeout(() => playNextTrack(false), 1200);
       }
     });
+  }
+
+  function playTrackInContext(track, trackListContext) {
+    if (!track) return;
+    const list = Array.isArray(trackListContext) && trackListContext.length > 0
+      ? trackListContext
+      : (state.currentPlaylistTracks.length > 0 ? state.currentPlaylistTracks : [track]);
+
+    state.currentPlaylistTracks = list;
+
+    const trackIndex = list.findIndex(t =>
+      (t.id && track.id && t.id == track.id) ||
+      (t.title && track.title && t.title.trim().toLowerCase() === track.title.trim().toLowerCase() &&
+       t.artist && track.artist && t.artist.trim().toLowerCase() === track.artist.trim().toLowerCase())
+    );
+
+    let upcomingQueue = [];
+    if (state.isShuffle) {
+      const pool = list.filter((_, idx) => idx !== trackIndex);
+      upcomingQueue = pool.sort(() => 0.5 - Math.random());
+    } else {
+      if (trackIndex !== -1) {
+        // Strictly play upcoming songs in sequence from this position
+        upcomingQueue = list.slice(trackIndex + 1);
+      } else {
+        upcomingQueue = list.filter(t => t.id != track.id);
+      }
+    }
+
+    playTrack(track, upcomingQueue);
   }
 
   function playTrack(track, newQueue = null) {
@@ -205,12 +242,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Add current track to history
-    if (state.currentTrack) {
+    if (state.currentTrack && state.currentTrack.id !== track.id) {
       state.history.push(state.currentTrack);
       if (state.history.length > 30) state.history.shift();
     }
 
     state.currentTrack = track;
+
+    // Reset seek progress and timer display cleanly to 0:00
+    seekSlider.value = 0;
+    seekFill.style.width = '0%';
+    currentTimeLabel.textContent = '0:00';
+    totalDurationLabel.textContent = track.duration_str || (track.duration ? formatTime(track.duration) : '0:00');
+
+    // Reset lyrics state
+    state.syncedLyrics = [];
+    state.activeLyricIndex = -1;
+    if (lyricsContainer) lyricsContainer.innerHTML = '';
 
     // Check if track is from Spotify or Curated and streamUrl needs resolving
     if ((track.source === 'spotify' || track.source === 'curated') && !track.stream_url) {
@@ -221,19 +269,29 @@ document.addEventListener('DOMContentLoaded', () => {
       updateQueueUI();
       highlightActiveTrackRow();
 
+      let previewStarted = false;
       // If preview available, start it immediately so user hears sound in <50ms
       if (track.preview_url) {
+        audio.pause();
         audio.src = `/api/stream?url=${encodeURIComponent(track.preview_url)}`;
+        audio.currentTime = 0;
         audio.play().then(() => {
           state.isPlaying = true;
           updatePlayPauseIcons();
         }).catch(() => {});
+        previewStarted = true;
+      } else {
+        audio.pause();
+        audio.src = '';
+        audio.currentTime = 0;
       }
 
       // Resolve full 320kbps stream in background
       fetch(`/api/spotify/resolve?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist)}&preview=${encodeURIComponent(track.preview_url || '')}`)
         .then(r => r.json())
         .then(res => {
+          if (!state.currentTrack || state.currentTrack.id !== track.id) return;
+
           if (res.stream_url) {
             track.stream_url = res.stream_url;
             track.stream_320 = res.stream_320 || res.stream_url;
@@ -244,9 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
               playerThumb.src = res.image;
             }
             playerArtist.textContent = track.artist || 'Unknown Artist';
-            const curTime = audio.currentTime;
+            const curTime = (previewStarted && !isNaN(audio.currentTime)) ? audio.currentTime : 0;
             audio.src = `/api/stream?url=${encodeURIComponent(res.stream_url)}`;
-            audio.currentTime = curTime;
+            if (curTime > 0) {
+              audio.currentTime = curTime;
+            } else {
+              audio.currentTime = 0;
+            }
             audio.play().then(() => {
               state.isPlaying = true;
               updatePlayPauseIcons();
@@ -276,16 +338,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!streamUrl) {
-      alert('Tautan lagu tidak valid atau tidak dapat dimainkan.');
+      console.warn('Tautan lagu tidak valid, memutar lagu berikutnya...');
+      setTimeout(() => playNextTrack(false), 500);
       return;
     }
 
-    // Use streaming proxy for range header support and zero CORS issues
+    // Reset audio and set source from beginning
+    audio.pause();
+    audio.currentTime = 0;
     if (streamUrl.startsWith('http')) {
       audio.src = `/api/stream?url=${encodeURIComponent(streamUrl)}`;
     } else {
       audio.src = streamUrl; // Local file stream
     }
+    audio.currentTime = 0;
 
     // Update bottom player UI
     playerTitle.textContent = track.title || 'Unknown Title';
@@ -320,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function togglePlayPause() {
     if (!state.currentTrack) {
       if (state.currentPlaylistTracks.length > 0) {
-        playTrack(state.currentPlaylistTracks[0], state.currentPlaylistTracks.slice(1));
+        playTrackInContext(state.currentPlaylistTracks[0], state.currentPlaylistTracks);
       }
       return;
     }
@@ -332,12 +398,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function playNextTrack() {
-    if (state.repeatMode === 2) {
+  function playNextTrack(isManual = false) {
+    if (state.repeatMode === 2 && !isManual) {
       audio.currentTime = 0;
-      audio.play();
+      audio.play().catch(e => console.warn(e));
       return;
     }
+
+    // Reset seek progress UI
+    seekSlider.value = 0;
+    seekFill.style.width = '0%';
+    currentTimeLabel.textContent = '0:00';
 
     if (state.queue.length > 0) {
       let nextIndex = 0;
@@ -346,19 +417,49 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const nextTrack = state.queue.splice(nextIndex, 1)[0];
       playTrack(nextTrack);
+    } else if (state.currentPlaylistTracks && state.currentPlaylistTracks.length > 0) {
+      const currIdx = state.currentTrack
+        ? state.currentPlaylistTracks.findIndex(t =>
+            (t.id && state.currentTrack.id && t.id == state.currentTrack.id) ||
+            (t.title && state.currentTrack.title && t.title.trim().toLowerCase() === state.currentTrack.title.trim().toLowerCase() &&
+             t.artist && state.currentTrack.artist && t.artist.trim().toLowerCase() === state.currentTrack.artist.trim().toLowerCase())
+          )
+        : -1;
+
+      if (currIdx !== -1 && currIdx + 1 < state.currentPlaylistTracks.length) {
+        const nextTrack = state.currentPlaylistTracks[currIdx + 1];
+        state.queue = state.currentPlaylistTracks.slice(currIdx + 2);
+        playTrack(nextTrack);
+      } else if (state.repeatMode === 1) {
+        // Repeat all: loop back to beginning of playlist
+        const firstTrack = state.currentPlaylistTracks[0];
+        state.queue = state.currentPlaylistTracks.slice(1);
+        playTrack(firstTrack);
+      } else {
+        // End of playlist
+        state.isPlaying = false;
+        audio.pause();
+        audio.currentTime = 0;
+        updatePlayPauseIcons();
+        highlightActiveTrackRow();
+      }
     } else if (state.repeatMode === 1 && state.history.length > 0) {
-      // Repeat all
       state.queue = [...state.history];
       state.history = [];
-      playNextTrack();
+      playNextTrack(isManual);
     } else {
-      console.log('End of queue');
+      state.isPlaying = false;
+      audio.pause();
+      audio.currentTime = 0;
+      updatePlayPauseIcons();
+      highlightActiveTrackRow();
     }
   }
 
   function playPrevTrack() {
     if (audio.currentTime > 3) {
       audio.currentTime = 0;
+      audio.play().catch(e => console.warn(e));
       return;
     }
 
@@ -368,17 +469,31 @@ document.addEventListener('DOMContentLoaded', () => {
         state.queue.unshift(state.currentTrack);
       }
       playTrack(prevTrack);
-    } else {
-      audio.currentTime = 0;
+      return;
     }
+
+    if (state.currentPlaylistTracks && state.currentPlaylistTracks.length > 0 && state.currentTrack) {
+      const currIdx = state.currentPlaylistTracks.findIndex(t =>
+        (t.id && state.currentTrack.id && t.id == state.currentTrack.id) ||
+        (t.title && state.currentTrack.title && t.title.trim().toLowerCase() === state.currentTrack.title.trim().toLowerCase())
+      );
+      if (currIdx > 0) {
+        const prevTrack = state.currentPlaylistTracks[currIdx - 1];
+        state.queue = state.currentPlaylistTracks.slice(currIdx);
+        playTrack(prevTrack);
+        return;
+      }
+    }
+
+    audio.currentTime = 0;
   }
 
   function handleTrackEnded() {
     if (state.repeatMode === 2) {
       audio.currentTime = 0;
-      audio.play();
+      audio.play().catch(e => console.warn(e));
     } else {
-      playNextTrack();
+      playNextTrack(false);
     }
   }
 
@@ -397,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   function setupControls() {
     btnPlayPause.addEventListener('click', togglePlayPause);
-    btnNext.addEventListener('click', playNextTrack);
+    btnNext.addEventListener('click', () => playNextTrack(true));
     btnPrev.addEventListener('click', playPrevTrack);
 
     // Shuffle
@@ -590,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Playlist banner Play All button
     document.getElementById('btn-playlist-play-all').addEventListener('click', () => {
       if (state.currentPlaylistTracks.length > 0) {
-        playTrack(state.currentPlaylistTracks[0], state.currentPlaylistTracks.slice(1));
+        playTrackInContext(state.currentPlaylistTracks[0], state.currentPlaylistTracks);
       }
     });
 
@@ -651,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
           `;
           qc.addEventListener('click', () => {
-            playTrack(tr, topTracks.filter(t => t.id !== tr.id));
+            playTrackInContext(tr, topTracks);
           });
           quickGrid.appendChild(qc);
         });
@@ -745,8 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     card.addEventListener('click', () => {
-      const restOfList = (trackListContext || []).filter(t => t.id !== track.id);
-      playTrack(track, restOfList);
+      playTrackInContext(track, trackListContext);
     });
 
     return card;
@@ -858,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </button>
     `;
     topCard.addEventListener('click', () => {
-      playTrack(top, results.slice(1));
+      playTrackInContext(top, results);
     });
     topResultBox.appendChild(topCard);
 
@@ -918,8 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const otherTracks = (trackListContext || []).filter(t => t.id !== track.id);
-      playTrack(track, otherTracks);
+      playTrackInContext(track, trackListContext);
     });
 
     return row;
@@ -927,8 +1040,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function highlightActiveTrackRow() {
     document.querySelectorAll('.track-row').forEach(r => {
-      const isCurrent = state.currentTrack && r.dataset.id === state.currentTrack.id;
-      r.classList.toggle('playing', isCurrent);
+      const isCurrent = state.currentTrack && (
+        (state.currentTrack.id && r.dataset.id == state.currentTrack.id) ||
+        (r.querySelector('.track-name')?.textContent === state.currentTrack.title &&
+         r.querySelector('.track-artist-sub')?.textContent === state.currentTrack.artist)
+      );
+      r.classList.toggle('playing', !!isCurrent);
     });
   }
 
@@ -1399,7 +1516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Auto-play the first dropped track
-    playTrack(newLocalTracks[0], newLocalTracks.slice(1));
+    playTrackInContext(newLocalTracks[0], state.localSongs);
     switchView('local');
   }
 
@@ -1465,8 +1582,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="track-dur-col">${tr.duration_str || ''}</div>
       `;
       qRow.addEventListener('click', () => {
-        state.queue.splice(i, 1);
-        playTrack(tr);
+        const nextQueue = state.queue.slice(i + 1);
+        playTrack(tr, nextQueue);
       });
       queueNextItems.appendChild(qRow);
     });
@@ -1609,6 +1726,12 @@ document.addEventListener('DOMContentLoaded', () => {
           break;
         case 'KeyQ':
           btnToggleQueue.click();
+          break;
+        case 'KeyN':
+          playNextTrack(true);
+          break;
+        case 'KeyP':
+          playPrevTrack();
           break;
       }
     });
