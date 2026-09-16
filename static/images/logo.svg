@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117" />
+      <stop offset="50%" stop-color="#121820" />
+      <stop offset="100%" stop-color="#05070a" />
+    </linearGradient>
+
+    <!-- Spotify Neon Green Gradient -->
+    <linearGradient id="spotifyGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22e56c" />
+      <stop offset="40%" stop-color="#1ed760" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Gold Accent Gradient for KW badge -->
+    <linearGradient id="goldKW" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <!-- Glowing Ambient Shadow -->
+    <radialGradient id="glowEffect" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1ed760" stop-opacity="0.35" />
+      <stop offset="70%" stop-color="#1ed760" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#1ed760" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Wave Shadow -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Glow -->
+  <circle cx="256" cy="256" r="230" fill="url(#glowEffect)" />
+
+  <!-- Base Squircle Container -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" stroke="#1ed760" stroke-width="4" stroke-opacity="0.25" />
+
+  <!-- Inner Subtle Ring -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.05" />
+
+  <!-- Spotify Main Circle -->
+  <circle cx="256" cy="256" r="160" fill="url(#spotifyGreen)" filter="url(#dropShadow)" />
+
+  <!-- Spotify Curved Waves (Black Cutout with Clean Geometry) -->
+  <g fill="#0b0e14" filter="url(#dropShadow)">
+    <!-- Top Arc -->
+    <path d="M168 185 c 48 -14, 128 -14, 176 15 c 6 3, 8 11, 4 17 c -3 6, -11 8, -17 4 c -42 -25, -114 -25, -156 -12 c -6 2, -13 -2, -15 -8 c -2 -6, 2 -13, 8 -16 z" />
+
+    <!-- Middle Arc -->
+    <path d="M178 240 c 42 -12, 110 -12, 150 12 c 5 3, 7 10, 4 15 c -3 5, -10 7, -15 4 c -34 -20, -96 -20, -132 -10 c -5 2, -11 -2, -12 -7 c -2 -5, 2 -11, 7 -13 z" />
+
+    <!-- Bottom Arc -->
+    <path d="M188 295 c 34 -9, 90 -9, 122 10 c 4 3, 5 9, 3 13 c -3 4, -9 5, -13 3 c -28 -15, -78 -15, -106 -7 c -5 1, -10 -2, -11 -6 c -1 -5, 2 -10, 6 -12 z" />
+  </g>
+
+  <!-- Modern "KW" Ultra-Light Badge (Bottom Right) -->
+  <g transform="translate(320, 320)" filter="url(#dropShadow)">
+    <!-- Badge Background -->
+    <rect x="-10" y="-8" width="124" height="66" rx="20" fill="#0b0e14" stroke="url(#goldKW)" stroke-width="3" />
+    <rect x="-6" y="-4" width="116" height="58" rx="16" fill="#182230" />
+    <!-- "KW" Text in Bold Cyber Aesthetic -->
+    <text x="52" y="37" font-family="'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="34" fill="url(#goldKW)" text-anchor="middle" letter-spacing="2">KW</text>
+  </g>
+
+  <!-- Subtle Bolt/Speed Spark (representing Ultra-Lightweight & Speed) -->
+  <path d="M305 328 L296 345 L306 345 L297 362 L316 340 L305 340 Z" fill="url(#goldKW)" />
+</svg>

@@ -371,6 +371,15 @@ def resolve_spotify_track(title: str, artist: str, preview: Optional[str] = None
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
+@app.get("/favicon.ico")
+async def serve_favicon():
+    """Serve the SVG favicon for browser tabs."""
+    fav = STATIC_DIR / "images" / "favicon.svg"
+    if fav.exists():
+        return FileResponse(fav, media_type="image/svg+xml")
+    return Response(status_code=204)
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
     """Serve the single page Spotify KW application."""
